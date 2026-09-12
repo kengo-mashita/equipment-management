@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>備品一覧 - 備品・機材管理</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; }
+        main { padding: 16px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+        th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+        th { background: #f0f0f0; }
+        form.search { margin-top: 12px; }
+        form.search label { margin-right: 4px; }
+        form.search input, form.search select { margin-right: 16px; }
+        .empty { color: #666; margin-top: 16px; }
+    </style>
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+
+    <main>
+        <h1>備品一覧</h1>
+
+        <p sec:authorize="hasRole('ADMIN')">
+            <a th:href="@{/equipment/new}">＋ 新規登録</a>
+        </p>
+
+        <form class="search" th:action="@{/equipment}" method="get">
+            <label for="name">品名</label>
+            <input type="text" id="name" name="name" th:value="${name}">
+
+            <label for="status">状態</label>
+            <select id="status" name="status">
+                <option value="">すべて</option>
+                <option th:each="s : ${statuses}"
+                        th:value="${s}"
+                        th:text="${s.label}"
+                        th:selected="${s == status}"></option>
+            </select>
+
+            <button type="submit">検索</button>
+        </form>
+
+        <p class="empty" th:if="${#lists.isEmpty(equipmentList)}">該当する備品がありません。</p>
+
+        <table th:unless="${#lists.isEmpty(equipmentList)}">
+            <thead>
+                <tr>
+                    <th>品名</th>
+                    <th>管理番号</th>
+                    <th>保管場所</th>
+                    <th>状態</th>
+                    <th>購入日</th>
+                    <th sec:authorize="hasRole('ADMIN')">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${equipmentList}">
+                    <td th:text="${item.name}"></td>
+                    <td th:text="${item.assetNumber}"></td>
+                    <td th:text="${item.location}"></td>
+                    <td th:text="${item.status.label}"></td>
+                    <td th:text="${item.purchaseDate != null ? item.purchaseDate : '-'}"></td>
+                    <td sec:authorize="hasRole('ADMIN')">
+                        <a th:href="@{/equipment/{id}/edit(id=${item.id})}">編集</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>
