@@ -62,7 +62,7 @@
                 <table class="table table--responsive">
                     <thead>
                         <tr>
-                            <th>品名</th>
+                            <th class="col-primary">品名</th>
                             <th>管理番号</th>
                             <th>保管場所</th>
                             <th>状態</th>
@@ -91,11 +91,14 @@
                                 <!-- 利用可: 借用者（社員マスタから選択）・返却予定日を入力して貸出登録 -->
                                 <form class="inline-form" th:if="${item.status.name() == 'AVAILABLE'}"
                                       th:action="@{/equipment/{id}/lend(id=${item.id})}" method="post">
-                                    <select class="form-control form-control--sm" name="employeeId" required>
+                                    <select class="form-control form-control--sm" name="employeeId" required aria-label="借用者">
                                         <option value="">借用者を選択</option>
                                         <option th:each="e : ${employees}" th:value="${e.id}" th:text="${e.name}"></option>
                                     </select>
-                                    <input class="form-control form-control--sm" type="date" name="dueDate" title="返却予定日">
+                                    <label class="inline-form__group">
+                                        <span class="inline-form__label">返却予定</span>
+                                        <input class="form-control form-control--sm" type="date" name="dueDate">
+                                    </label>
                                     <button type="submit" class="btn btn--primary btn--sm">貸出する</button>
                                 </form>
                                 <!-- 貸出中: 現在の借用者名を表示し、返却操作を行える -->
