@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>備品一覧 - 備品・機材管理</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
@@ -58,7 +59,7 @@
             </div>
 
             <div class="table-wrapper" th:unless="${#lists.isEmpty(equipmentList)}">
-                <table class="table">
+                <table class="table table--responsive">
                     <thead>
                         <tr>
                             <th>品名</th>
@@ -72,21 +73,21 @@
                     </thead>
                     <tbody>
                         <tr th:each="item : ${equipmentList}">
-                            <td>
+                            <td class="cell-primary">
                                 <a class="row-link" th:href="@{/equipment/{id}(id=${item.id})}" th:text="${item.name}"></a>
                             </td>
-                            <td class="cell-mono" th:text="${item.assetNumber}"></td>
-                            <td th:text="${item.location}"></td>
-                            <td>
+                            <td class="cell-mono" data-label="管理番号" th:text="${item.assetNumber}"></td>
+                            <td data-label="保管場所" th:text="${item.location}"></td>
+                            <td class="cell-status" data-label="状態">
                                 <span class="badge"
                                       th:classappend="'badge--' + ${#strings.toLowerCase(item.status.name())}"
                                       th:text="${item.status.label}"></span>
                             </td>
-                            <td class="cell-nowrap">
+                            <td class="cell-nowrap" data-label="購入日">
                                 <span th:if="${item.purchaseDate != null}" th:text="${item.purchaseDate}"></span>
                                 <span th:if="${item.purchaseDate == null}" class="cell-muted">-</span>
                             </td>
-                            <td>
+                            <td data-label="貸出・返却">
                                 <!-- 利用可: 借用者（社員マスタから選択）・返却予定日を入力して貸出登録 -->
                                 <form class="inline-form" th:if="${item.status.name() == 'AVAILABLE'}"
                                       th:action="@{/equipment/{id}/lend(id=${item.id})}" method="post">

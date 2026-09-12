@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>社員一覧 - 備品・機材管理</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
@@ -34,7 +35,7 @@
             </div>
 
             <div class="table-wrapper" th:unless="${#lists.isEmpty(employeeList)}">
-                <table class="table">
+                <table class="table table--responsive">
                     <thead>
                         <tr>
                             <th>社員番号</th>
@@ -45,9 +46,9 @@
                     </thead>
                     <tbody>
                         <tr th:each="item : ${employeeList}">
-                            <td class="cell-mono" th:text="${item.employeeNumber}"></td>
-                            <td><strong th:text="${item.name}"></strong></td>
-                            <td>
+                            <td class="cell-mono" data-label="社員番号" th:text="${item.employeeNumber}"></td>
+                            <td class="cell-primary"><strong th:text="${item.name}"></strong></td>
+                            <td data-label="部署">
                                 <span th:if="${item.department != null}" th:text="${item.department}"></span>
                                 <span th:if="${item.department == null}" class="cell-muted">-</span>
                             </td>

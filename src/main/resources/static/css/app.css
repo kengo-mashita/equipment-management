@@ -764,3 +764,311 @@ select.form-control {
     font-size: 12px;
     color: var(--color-text-faint);
 }
+
+/* ==========================================================================
+   レスポンシブ対応
+   - タブレット以下（〜1024px）: 余白を詰め、テーブルは横スクロール
+   - スマホ（〜768px）: ヘッダー2段積み、一覧テーブルはカード型に切り替え
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+    .container {
+        padding: 20px 16px 40px;
+    }
+
+    .app-header__inner {
+        padding: 0 16px;
+        gap: 20px;
+    }
+
+    .app-nav a {
+        padding: 0 10px;
+    }
+
+    /* 列を無理に折り返さず、.table-wrapper の横スクロールに任せる */
+    .table th,
+    .table td {
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+
+    /* --- ヘッダー: 1段目にブランド＋ユーザーメニュー、2段目にナビ --- */
+    .app-header {
+        height: auto;
+    }
+
+    .app-header__inner {
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0 12px;
+        padding: 8px 16px 0;
+    }
+
+    .brand {
+        order: 1;
+        flex: 1;
+        min-width: 0;
+        font-size: 14px;
+    }
+
+    .user-menu {
+        order: 2;
+        gap: 6px;
+    }
+
+    .user-chip strong,
+    .user-chip .badge {
+        display: none;
+    }
+
+    .app-nav {
+        order: 3;
+        flex-basis: 100%;
+        height: auto;
+        margin-top: 6px;
+        gap: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .app-nav a {
+        flex: 1;
+        justify-content: center;
+        padding: 10px 8px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    /* --- ページヘッダー・アクション: 縦積み --- */
+    .container {
+        padding: 16px 12px 32px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .page-title {
+        font-size: 19px;
+    }
+
+    .page-actions {
+        flex-wrap: wrap;
+    }
+
+    .page-actions .btn {
+        flex: 1;
+    }
+
+    /* --- フィルターバー: 各項目を全幅に --- */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 14px 16px;
+    }
+
+    .filter-bar__field .form-control--inline {
+        display: block;
+        width: 100%;
+    }
+
+    .filter-bar__actions .btn {
+        flex: 1;
+    }
+
+    .card__header {
+        padding: 12px 16px;
+    }
+
+    .card__body {
+        padding: 16px;
+    }
+
+    /* --- 一覧テーブル: カード型に切り替え --- */
+    .table--responsive thead {
+        display: none;
+    }
+
+    .table--responsive,
+    .table--responsive tbody,
+    .table--responsive tr,
+    .table--responsive td {
+        display: block;
+        width: 100%;
+    }
+
+    /* 列順に関わらず、主要項目を先頭・操作ボタンを末尾に並べ替える */
+    .table--responsive tr {
+        display: flex;
+        flex-direction: column;
+        padding: 12px 16px 14px;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .table--responsive td.cell-primary {
+        order: -1;
+    }
+
+    .table--responsive td.cell-actions {
+        order: 99;
+    }
+
+    .table--responsive tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .table--responsive tbody tr:hover {
+        background: transparent;
+    }
+
+    .table--responsive td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 6px 0;
+        border-bottom: none;
+        text-align: left;
+        white-space: normal;
+    }
+
+    .table--responsive td[data-label]::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        min-width: 5em;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--color-text-muted);
+    }
+
+    /* 1行目: 主要項目（品名・氏名）を大きく表示 */
+    .table--responsive td.cell-primary {
+        padding: 0 0 8px;
+        font-size: 15px;
+    }
+
+    .table--responsive td.cell-primary::before {
+        content: none;
+    }
+
+    .table--responsive td.cell-primary .row-link,
+    .table--responsive td.cell-primary strong {
+        font-size: 15px;
+    }
+
+    /* 貸出フォームは縦積み・全幅 */
+    .table--responsive .inline-form {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 8px;
+    }
+
+    .table--responsive .inline-form .form-control,
+    .table--responsive .inline-form select.form-control {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .table--responsive td[data-label="貸出・返却"] {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding-top: 10px;
+    }
+
+    .table--responsive .borrower-info {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .table--responsive .borrower-info form .btn {
+        width: 100%;
+    }
+
+    /* 操作ボタン群は最下段に横並び・全幅 */
+    .table--responsive td.cell-actions {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: 12px;
+        margin-top: 4px;
+        border-top: 1px dashed var(--color-border);
+    }
+
+    .table--responsive td.cell-actions .btn,
+    .table--responsive td.cell-actions form {
+        flex: 1;
+        margin: 0;
+    }
+
+    .table--responsive td.cell-actions form .btn {
+        width: 100%;
+    }
+
+    .table--responsive td.cell-actions .btn--ghost {
+        border-color: var(--color-border);
+    }
+
+    /* --- 詳細画面のキー・バリュー表: 縦積み --- */
+    .detail-table th,
+    .detail-table td {
+        display: block;
+        width: 100%;
+        padding: 0;
+    }
+
+    .detail-table tr {
+        display: block;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .detail-table tr:last-child {
+        border-bottom: none;
+    }
+
+    .detail-table tr:last-child th,
+    .detail-table tr:last-child td,
+    .detail-table th,
+    .detail-table td {
+        border-bottom: none;
+    }
+
+    .detail-table th {
+        margin-bottom: 4px;
+        background: transparent;
+        font-size: 12px;
+    }
+
+    /* --- フォーム: ボタンを全幅・縦積み --- */
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
+
+    /* --- ログイン --- */
+    .login-page {
+        align-items: flex-start;
+        padding: 40px 16px;
+    }
+
+    .login-card {
+        padding: 28px 22px;
+    }
+}

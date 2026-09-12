@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>貸出履歴 - 備品・機材管理</title>
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
@@ -28,7 +29,7 @@
             </div>
 
             <div class="table-wrapper" th:unless="${#lists.isEmpty(lendingList)}">
-                <table class="table">
+                <table class="table table--responsive">
                     <thead>
                         <tr>
                             <th>備品名</th>
@@ -42,23 +43,23 @@
                     </thead>
                     <tbody>
                         <tr th:each="record : ${lendingList}">
-                            <td>
+                            <td class="cell-primary">
                                 <a class="row-link" th:href="@{/equipment/{id}(id=${record.equipment.id})}"
                                    th:text="${record.equipment.name}"></a>
                             </td>
-                            <td class="cell-mono" th:text="${record.equipment.assetNumber}"></td>
-                            <td th:text="${record.employee.name}"></td>
-                            <td class="cell-nowrap" th:text="${#temporals.format(record.lentAt, 'yyyy-MM-dd HH:mm')}"></td>
-                            <td class="cell-nowrap">
+                            <td class="cell-mono" data-label="管理番号" th:text="${record.equipment.assetNumber}"></td>
+                            <td data-label="借用者" th:text="${record.employee.name}"></td>
+                            <td class="cell-nowrap" data-label="貸出日時" th:text="${#temporals.format(record.lentAt, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td class="cell-nowrap" data-label="返却予定日">
                                 <span th:if="${record.dueDate != null}" th:text="${record.dueDate}"></span>
                                 <span th:if="${record.dueDate == null}" class="cell-muted">-</span>
                             </td>
-                            <td class="cell-nowrap">
+                            <td class="cell-nowrap" data-label="返却日時">
                                 <span th:if="${record.returnedAt != null}"
                                       th:text="${#temporals.format(record.returnedAt, 'yyyy-MM-dd HH:mm')}"></span>
                                 <span th:if="${record.returnedAt == null}" class="cell-muted">-</span>
                             </td>
-                            <td>
+                            <td class="cell-status" data-label="状態">
                                 <span th:if="${record.returnedAt != null}" class="badge badge--neutral">返却済み</span>
                                 <span th:if="${record.returnedAt == null}" class="badge badge--warning">未返却</span>
                             </td>
