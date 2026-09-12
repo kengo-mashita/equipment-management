@@ -1,5 +1,11 @@
 HELP.md
 target/
+
+### H2 Database files ###
+data/
+
+### Claude Code local settings ###
+.claude/settings.local.json
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

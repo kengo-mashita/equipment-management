@@ -1,4 +1,4 @@
-package jp.co.example.equipment_management;
+package jp.co.example.equipmentmanagement;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

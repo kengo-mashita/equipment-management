@@ -1,4 +1,4 @@
-package jp.co.example.equipment_management;
+package jp.co.example.equipmentmanagement;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
