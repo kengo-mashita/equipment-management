@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>貸出履歴 - 備品・機材管理</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; }
+        main { padding: 16px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+        th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
+        th { background: #f0f0f0; }
+        .empty { color: #666; margin-top: 16px; }
+        .not-returned { color: #b3261e; }
+    </style>
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+
+    <main>
+        <h1>貸出履歴</h1>
+
+        <p class="empty" th:if="${#lists.isEmpty(lendingList)}">貸出記録がありません。</p>
+
+        <table th:unless="${#lists.isEmpty(lendingList)}">
+            <thead>
+                <tr>
+                    <th>備品名</th>
+                    <th>借用者名</th>
+                    <th>貸出日時</th>
+                    <th>返却予定日</th>
+                    <th>返却日時</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="record : ${lendingList}">
+                    <td th:text="${record.equipment.name}"></td>
+                    <td th:text="${record.borrowerName}"></td>
+                    <td th:text="${#temporals.format(record.lentAt, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td th:text="${record.dueDate != null ? record.dueDate : '-'}"></td>
+                    <td th:if="${record.returnedAt != null}" th:text="${#temporals.format(record.returnedAt, 'yyyy-MM-dd HH:mm')}"></td>
+                    <td th:if="${record.returnedAt == null}" class="not-returned">未返却</td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>

@@ -19,6 +19,7 @@ import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
 import jp.co.example.equipmentmanagement.service.EquipmentNotFoundException;
 import jp.co.example.equipmentmanagement.service.EquipmentService;
+import jp.co.example.equipmentmanagement.service.LendingService;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -30,6 +31,7 @@ public class EquipmentController {
     private static final EquipmentStatus[] EDITABLE_STATUSES = { EquipmentStatus.AVAILABLE, EquipmentStatus.BROKEN };
 
     private final EquipmentService equipmentService;
+    private final LendingService lendingService;
 
     @GetMapping
     public String list(@RequestParam(required = false) String name,
@@ -42,6 +44,8 @@ public class EquipmentController {
         model.addAttribute("name", name);
         model.addAttribute("status", statusFilter);
         model.addAttribute("statuses", EquipmentStatus.values());
+        // 「貸出中」の行に借用者名を表示するため、備品ID -> 有効な貸出記録のマップを渡す
+        model.addAttribute("activeLendings", lendingService.findActiveLendingsByEquipmentId());
         return "equipment/list";
     }
 

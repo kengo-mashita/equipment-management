@@ -13,6 +13,9 @@
         form.search label { margin-right: 4px; }
         form.search input, form.search select { margin-right: 16px; }
         .empty { color: #666; margin-top: 16px; }
+        .lend-form input[type="text"], .lend-form input[type="date"] { width: 100px; margin-bottom: 4px; }
+        .lend-form, .return-form { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+        .borrower { font-size: 0.9rem; }
         .message { padding: 8px 12px; border-radius: 4px; }
         .message.success { background: #eaf7ea; color: #256029; }
         .message.error { background: #fdecea; color: #b3261e; }
@@ -57,6 +60,7 @@
                     <th>保管場所</th>
                     <th>状態</th>
                     <th>購入日</th>
+                    <th>貸出・返却</th>
                     <th sec:authorize="hasRole('ADMIN')">操作</th>
                 </tr>
             </thead>
@@ -67,6 +71,25 @@
                     <td th:text="${item.location}"></td>
                     <td th:text="${item.status.label}"></td>
                     <td th:text="${item.purchaseDate != null ? item.purchaseDate : '-'}"></td>
+                    <td>
+                        <!-- 利用可: 借用者名・返却予定日を入力して貸出登録 -->
+                        <form class="lend-form" th:if="${item.status.name() == 'AVAILABLE'}"
+                              th:action="@{/equipment/{id}/lend(id=${item.id})}" method="post">
+                            <input type="text" name="borrowerName" placeholder="借用者名" required>
+                            <input type="date" name="dueDate">
+                            <button type="submit">貸出する</button>
+                        </form>
+                        <!-- 貸出中: 現在の借用者名を表示し、返却操作を行える -->
+                        <div class="return-form" th:if="${item.status.name() == 'LENT'}">
+                            <span class="borrower"
+                                  th:text="${activeLendings.get(item.id)?.borrowerName} + ' さんが借用中'"></span>
+                            <form th:action="@{/equipment/{id}/return(id=${item.id})}" method="post">
+                                <button type="submit">返却する</button>
+                            </form>
+                        </div>
+                        <!-- 故障中: 操作なし -->
+                        <span th:if="${item.status.name() == 'BROKEN'}">-</span>
+                    </td>
                     <td sec:authorize="hasRole('ADMIN')">
                         <a th:href="@{/equipment/{id}/edit(id=${item.id})}">編集</a>
                     </td>
