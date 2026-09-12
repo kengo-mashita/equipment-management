@@ -20,9 +20,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jp.co.example.equipmentmanagement.dto.LendingForm;
+import jp.co.example.equipmentmanagement.entity.Employee;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
 import jp.co.example.equipmentmanagement.entity.Lending;
+import jp.co.example.equipmentmanagement.repository.EmployeeRepository;
 import jp.co.example.equipmentmanagement.repository.EquipmentRepository;
 import jp.co.example.equipmentmanagement.repository.LendingRepository;
 
@@ -35,16 +37,21 @@ class LendingServiceTest {
     @Mock
     private EquipmentRepository equipmentRepository;
 
+    @Mock
+    private EmployeeRepository employeeRepository;
+
     @InjectMocks
     private LendingService lendingService;
 
     @Test
     void lend_利用可の備品は貸出でき状態が貸出中になる() {
         Equipment equipment = equipment(1L, EquipmentStatus.AVAILABLE);
+        Employee employee = employee(1L, "山田太郎");
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(equipment));
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(employee));
 
         LendingForm form = new LendingForm();
-        form.setBorrowerName("山田太郎");
+        form.setEmployeeId(1L);
         form.setDueDate(LocalDate.now().plusDays(7));
 
         lendingService.lend(1L, form);
@@ -53,7 +60,7 @@ class LendingServiceTest {
 
         ArgumentCaptor<Lending> captor = ArgumentCaptor.forClass(Lending.class);
         verify(lendingRepository).save(captor.capture());
-        assertThat(captor.getValue().getBorrowerName()).isEqualTo("山田太郎");
+        assertThat(captor.getValue().getEmployee()).isEqualTo(employee);
         assertThat(captor.getValue().getEquipment()).isEqualTo(equipment);
     }
 
@@ -63,7 +70,7 @@ class LendingServiceTest {
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(equipment));
 
         LendingForm form = new LendingForm();
-        form.setBorrowerName("山田太郎");
+        form.setEmployeeId(1L);
 
         assertThatThrownBy(() -> lendingService.lend(1L, form))
                 .isInstanceOf(EquipmentNotAvailableException.class);
@@ -76,7 +83,7 @@ class LendingServiceTest {
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(equipment));
 
         LendingForm form = new LendingForm();
-        form.setBorrowerName("山田太郎");
+        form.setEmployeeId(1L);
 
         assertThatThrownBy(() -> lendingService.lend(1L, form))
                 .isInstanceOf(EquipmentNotAvailableException.class);
@@ -88,16 +95,30 @@ class LendingServiceTest {
         when(equipmentRepository.findById(999L)).thenReturn(Optional.empty());
 
         LendingForm form = new LendingForm();
-        form.setBorrowerName("山田太郎");
+        form.setEmployeeId(1L);
 
         assertThatThrownBy(() -> lendingService.lend(999L, form))
                 .isInstanceOf(EquipmentNotFoundException.class);
     }
 
     @Test
+    void lend_存在しない社員はEmployeeNotFoundExceptionを投げる() {
+        Equipment equipment = equipment(1L, EquipmentStatus.AVAILABLE);
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(equipment));
+        when(employeeRepository.findById(999L)).thenReturn(Optional.empty());
+
+        LendingForm form = new LendingForm();
+        form.setEmployeeId(999L);
+
+        assertThatThrownBy(() -> lendingService.lend(1L, form))
+                .isInstanceOf(EmployeeNotFoundException.class);
+        verify(lendingRepository, never()).save(any());
+    }
+
+    @Test
     void returnEquipment_返却すると備品が利用可に戻り返却日時が設定される() {
         Equipment equipment = equipment(1L, EquipmentStatus.LENT);
-        Lending lending = Lending.builder().id(10L).equipment(equipment).borrowerName("山田太郎").build();
+        Lending lending = Lending.builder().id(10L).equipment(equipment).employee(employee(1L, "山田太郎")).build();
         when(equipmentRepository.findById(1L)).thenReturn(Optional.of(equipment));
         when(lendingRepository.findByEquipmentAndReturnedAtIsNull(equipment)).thenReturn(Optional.of(lending));
 
@@ -121,8 +142,8 @@ class LendingServiceTest {
     void findActiveLendingsByEquipmentId_備品IDをキーにしたマップを返す() {
         Equipment eq1 = equipment(1L, EquipmentStatus.LENT);
         Equipment eq2 = equipment(2L, EquipmentStatus.LENT);
-        Lending lending1 = Lending.builder().id(10L).equipment(eq1).borrowerName("山田太郎").build();
-        Lending lending2 = Lending.builder().id(11L).equipment(eq2).borrowerName("佐藤花子").build();
+        Lending lending1 = Lending.builder().id(10L).equipment(eq1).employee(employee(1L, "山田太郎")).build();
+        Lending lending2 = Lending.builder().id(11L).equipment(eq2).employee(employee(2L, "佐藤花子")).build();
         when(lendingRepository.findAllByReturnedAtIsNull()).thenReturn(List.of(lending1, lending2));
 
         Map<Long, Lending> result = lendingService.findActiveLendingsByEquipmentId();
@@ -136,6 +157,14 @@ class LendingServiceTest {
                 .name("ノートPC")
                 .assetNumber("EQ-000" + id)
                 .status(status)
+                .build();
+    }
+
+    private Employee employee(Long id, String name) {
+        return Employee.builder()
+                .id(id)
+                .employeeNumber("E-00" + id)
+                .name(name)
                 .build();
     }
 }

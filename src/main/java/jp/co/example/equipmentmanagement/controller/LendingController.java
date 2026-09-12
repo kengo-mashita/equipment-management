@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.validation.Valid;
 import jp.co.example.equipmentmanagement.dto.LendingForm;
+import jp.co.example.equipmentmanagement.service.EmployeeNotFoundException;
 import jp.co.example.equipmentmanagement.service.EquipmentNotAvailableException;
 import jp.co.example.equipmentmanagement.service.EquipmentNotFoundException;
 import jp.co.example.equipmentmanagement.service.LendingService;
@@ -29,7 +30,7 @@ public class LendingController {
             BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
         if (bindingResult.hasErrors()) {
-            redirectAttributes.addFlashAttribute("error", "借用者名を入力してください");
+            redirectAttributes.addFlashAttribute("error", "借用者を選択してください");
             return "redirect:/equipment";
         }
 
@@ -52,7 +53,7 @@ public class LendingController {
     }
 
     @ExceptionHandler({ EquipmentNotAvailableException.class, EquipmentNotFoundException.class,
-            NoActiveLendingException.class })
+            NoActiveLendingException.class, EmployeeNotFoundException.class })
     public String handleLendingError(RuntimeException ex, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("error", ex.getMessage());
         return "redirect:/equipment";

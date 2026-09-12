@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${employeeForm.id == null} ? '社員登録 - 備品・機材管理' : '社員編集 - 備品・機材管理'">社員フォーム</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header('employees')}"></header>
+
+    <main class="container container--narrow">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" th:text="${employeeForm.id == null} ? '社員登録' : '社員編集'">社員フォーム</h1>
+                <p class="page-subtitle" th:text="${employeeForm.id == null} ? '新しい社員を登録します' : '社員情報を編集します'"></p>
+            </div>
+        </div>
+
+        <section class="card">
+            <div class="card__body">
+                <form th:action="${employeeForm.id == null} ? @{/employees} : @{/employees/{id}/edit(id=${employeeForm.id})}"
+                      th:object="${employeeForm}" method="post">
+
+                    <div class="form-group">
+                        <label class="form-label" for="employeeNumber">社員番号<span class="required">必須</span></label>
+                        <input class="form-control" type="text" id="employeeNumber" th:field="*{employeeNumber}"
+                               th:classappend="${#fields.hasErrors('employeeNumber')} ? 'is-invalid'" placeholder="例：E-001">
+                        <p class="form-error" th:if="${#fields.hasErrors('employeeNumber')}" th:errors="*{employeeNumber}"></p>
+                        <p class="form-hint" th:unless="${#fields.hasErrors('employeeNumber')}">他の社員と重複しない番号を入力してください</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="name">氏名<span class="required">必須</span></label>
+                        <input class="form-control" type="text" id="name" th:field="*{name}"
+                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'" placeholder="例：山田太郎">
+                        <p class="form-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="department">部署</label>
+                        <input class="form-control" type="text" id="department" th:field="*{department}" placeholder="例：営業部">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn--primary">保存</button>
+                        <a class="btn btn--secondary" th:href="@{/employees}">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

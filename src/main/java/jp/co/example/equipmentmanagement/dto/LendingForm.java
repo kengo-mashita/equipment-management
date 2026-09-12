@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,8 +12,8 @@ import lombok.Setter;
 @Setter
 public class LendingForm {
 
-    @NotBlank(message = "借用者名は必須です")
-    private String borrowerName;
+    @NotNull(message = "借用者を選択してください")
+    private Long employeeId;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dueDate;

@@ -1,19 +1,31 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
-    <header th:fragment="header"
-            style="display:flex; justify-content:space-between; align-items:center; padding:8px 16px; background:#333; color:#fff; font-family:sans-serif;">
-        <span>
-            備品・機材管理
-            <a th:href="@{/equipment}" style="color:#fff; margin-left:16px;">備品一覧</a>
-            <a th:href="@{/lendings}" style="color:#fff; margin-left:8px;">貸出履歴</a>
-        </span>
-        <span>
-            <span sec:authentication="name">ユーザー名</span> さん
-            <form th:action="@{/logout}" method="post" style="display:inline; margin-left:8px;">
-                <button type="submit">ログアウト</button>
-            </form>
-        </span>
+    <!-- active: 現在の画面に対応するナビ項目のキー（equipment / lendings / employees） -->
+    <header th:fragment="header(active)" class="app-header">
+        <div class="app-header__inner">
+            <a class="brand" th:href="@{/equipment}">
+                <span class="brand__mark"></span>
+                <span>備品・機材管理</span>
+            </a>
+            <nav class="app-nav">
+                <a th:href="@{/equipment}" th:classappend="${active == 'equipment'} ? 'is-active'">備品一覧</a>
+                <a th:href="@{/lendings}" th:classappend="${active == 'lendings'} ? 'is-active'">貸出履歴</a>
+                <a th:href="@{/employees}" th:classappend="${active == 'employees'} ? 'is-active'">社員一覧</a>
+            </nav>
+            <div class="user-menu">
+                <span class="user-chip">
+                    <span class="user-avatar"
+                          th:text="${#strings.toUpperCase(#strings.substring(#authentication.name, 0, 1))}">A</span>
+                    <strong sec:authentication="name">ユーザー名</strong>
+                    <span sec:authorize="hasRole('ADMIN')" class="badge badge--info">管理者</span>
+                    <span sec:authorize="!hasRole('ADMIN')" class="badge badge--neutral">一般</span>
+                </span>
+                <form th:action="@{/logout}" method="post">
+                    <button type="submit" class="btn btn--ghost btn--sm">ログアウト</button>
+                </form>
+            </div>
+        </div>
     </header>
 </body>
 </html>

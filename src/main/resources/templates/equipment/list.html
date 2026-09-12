@@ -3,107 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <title>備品一覧 - 備品・機材管理</title>
-    <style>
-        body { font-family: sans-serif; margin: 0; }
-        main { padding: 16px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 16px; }
-        th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
-        th { background: #f0f0f0; }
-        form.search { margin-top: 12px; }
-        form.search label { margin-right: 4px; }
-        form.search input, form.search select { margin-right: 16px; }
-        .empty { color: #666; margin-top: 16px; }
-        .lend-form input[type="text"], .lend-form input[type="date"] { width: 100px; margin-bottom: 4px; }
-        .lend-form, .return-form { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
-        .borrower { font-size: 0.9rem; }
-        .message { padding: 8px 12px; border-radius: 4px; }
-        .message.success { background: #eaf7ea; color: #256029; }
-        .message.error { background: #fdecea; color: #b3261e; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-    <header th:replace="~{fragments/header :: header}"></header>
+    <header th:replace="~{fragments/header :: header('equipment')}"></header>
 
-    <main>
-        <h1>備品一覧</h1>
+    <main class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">備品一覧</h1>
+                <p class="page-subtitle">備品の検索・貸出・返却を行います</p>
+            </div>
+            <div class="page-actions" sec:authorize="hasRole('ADMIN')">
+                <a class="btn btn--primary" th:href="@{/equipment/new}">＋ 新規登録</a>
+            </div>
+        </div>
 
-        <p class="message success" th:if="${message}" th:text="${message}"></p>
-        <p class="message error" th:if="${error}" th:text="${error}"></p>
+        <p class="alert alert--success" th:if="${message}" th:text="${message}"></p>
+        <p class="alert alert--error" th:if="${error}" th:text="${error}"></p>
 
-        <p sec:authorize="hasRole('ADMIN')">
-            <a th:href="@{/equipment/new}">＋ 新規登録</a>
-        </p>
+        <section class="card">
+            <form class="filter-bar" th:action="@{/equipment}" method="get">
+                <div class="filter-bar__field">
+                    <label for="name">品名</label>
+                    <input class="form-control form-control--inline" type="text" id="name" name="name"
+                           th:value="${name}" placeholder="部分一致で検索">
+                </div>
+                <div class="filter-bar__field">
+                    <label for="status">状態</label>
+                    <select class="form-control form-control--inline" id="status" name="status">
+                        <option value="">すべて</option>
+                        <option th:each="s : ${statuses}"
+                                th:value="${s}"
+                                th:text="${s.label}"
+                                th:selected="${s == status}"></option>
+                    </select>
+                </div>
+                <div class="filter-bar__actions">
+                    <button type="submit" class="btn btn--primary">検索</button>
+                    <a class="btn btn--secondary" th:href="@{/equipment}">クリア</a>
+                </div>
+            </form>
+        </section>
 
-        <form class="search" th:action="@{/equipment}" method="get">
-            <label for="name">品名</label>
-            <input type="text" id="name" name="name" th:value="${name}">
+        <section class="card">
+            <div class="card__header">
+                <h2 class="card__title">備品リスト</h2>
+                <span class="card__meta" th:text="'全 ' + ${#lists.size(equipmentList)} + ' 件'"></span>
+            </div>
 
-            <label for="status">状態</label>
-            <select id="status" name="status">
-                <option value="">すべて</option>
-                <option th:each="s : ${statuses}"
-                        th:value="${s}"
-                        th:text="${s.label}"
-                        th:selected="${s == status}"></option>
-            </select>
+            <div class="empty-state" th:if="${#lists.isEmpty(equipmentList)}">
+                <p class="empty-state__title">該当する備品がありません</p>
+                <p>検索条件を変更するか、新しい備品を登録してください。</p>
+            </div>
 
-            <button type="submit">検索</button>
-        </form>
-
-        <p class="empty" th:if="${#lists.isEmpty(equipmentList)}">該当する備品がありません。</p>
-
-        <table th:unless="${#lists.isEmpty(equipmentList)}">
-            <thead>
-                <tr>
-                    <th>品名</th>
-                    <th>管理番号</th>
-                    <th>保管場所</th>
-                    <th>状態</th>
-                    <th>購入日</th>
-                    <th>詳細</th>
-                    <th>貸出・返却</th>
-                    <th sec:authorize="hasRole('ADMIN')">操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="item : ${equipmentList}">
-                    <td th:text="${item.name}"></td>
-                    <td th:text="${item.assetNumber}"></td>
-                    <td th:text="${item.location}"></td>
-                    <td th:text="${item.status.label}"></td>
-                    <td th:text="${item.purchaseDate != null ? item.purchaseDate : '-'}"></td>
-                    <td>
-                        <a th:href="@{/equipment/{id}(id=${item.id})}">詳細</a>
-                    </td>
-                    <td>
-                        <!-- 利用可: 借用者名・返却予定日を入力して貸出登録 -->
-                        <form class="lend-form" th:if="${item.status.name() == 'AVAILABLE'}"
-                              th:action="@{/equipment/{id}/lend(id=${item.id})}" method="post">
-                            <input type="text" name="borrowerName" placeholder="借用者名" required>
-                            <input type="date" name="dueDate">
-                            <button type="submit">貸出する</button>
-                        </form>
-                        <!-- 貸出中: 現在の借用者名を表示し、返却操作を行える -->
-                        <div class="return-form" th:if="${item.status.name() == 'LENT'}">
-                            <span class="borrower"
-                                  th:text="${activeLendings.get(item.id)?.borrowerName} + ' さんが借用中'"></span>
-                            <form th:action="@{/equipment/{id}/return(id=${item.id})}" method="post">
-                                <button type="submit">返却する</button>
-                            </form>
-                        </div>
-                        <!-- 故障中: 操作なし -->
-                        <span th:if="${item.status.name() == 'BROKEN'}">-</span>
-                    </td>
-                    <td sec:authorize="hasRole('ADMIN')">
-                        <a th:href="@{/equipment/{id}/edit(id=${item.id})}">編集</a>
-                        <form th:action="@{/equipment/{id}/delete(id=${item.id})}" method="post" style="display:inline;"
-                              onsubmit="return confirm('この備品を削除しますか？')">
-                            <button type="submit">削除</button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+            <div class="table-wrapper" th:unless="${#lists.isEmpty(equipmentList)}">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>品名</th>
+                            <th>管理番号</th>
+                            <th>保管場所</th>
+                            <th>状態</th>
+                            <th>購入日</th>
+                            <th>貸出・返却</th>
+                            <th class="cell-actions">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${equipmentList}">
+                            <td>
+                                <a class="row-link" th:href="@{/equipment/{id}(id=${item.id})}" th:text="${item.name}"></a>
+                            </td>
+                            <td class="cell-mono" th:text="${item.assetNumber}"></td>
+                            <td th:text="${item.location}"></td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="'badge--' + ${#strings.toLowerCase(item.status.name())}"
+                                      th:text="${item.status.label}"></span>
+                            </td>
+                            <td class="cell-nowrap">
+                                <span th:if="${item.purchaseDate != null}" th:text="${item.purchaseDate}"></span>
+                                <span th:if="${item.purchaseDate == null}" class="cell-muted">-</span>
+                            </td>
+                            <td>
+                                <!-- 利用可: 借用者（社員マスタから選択）・返却予定日を入力して貸出登録 -->
+                                <form class="inline-form" th:if="${item.status.name() == 'AVAILABLE'}"
+                                      th:action="@{/equipment/{id}/lend(id=${item.id})}" method="post">
+                                    <select class="form-control form-control--sm" name="employeeId" required>
+                                        <option value="">借用者を選択</option>
+                                        <option th:each="e : ${employees}" th:value="${e.id}" th:text="${e.name}"></option>
+                                    </select>
+                                    <input class="form-control form-control--sm" type="date" name="dueDate" title="返却予定日">
+                                    <button type="submit" class="btn btn--primary btn--sm">貸出する</button>
+                                </form>
+                                <!-- 貸出中: 現在の借用者名を表示し、返却操作を行える -->
+                                <div class="borrower-info" th:if="${item.status.name() == 'LENT'}">
+                                    <span class="borrower-info__name">
+                                        <strong th:text="${activeLendings.get(item.id)?.employee?.name}"></strong> さんが借用中
+                                    </span>
+                                    <form th:action="@{/equipment/{id}/return(id=${item.id})}" method="post">
+                                        <button type="submit" class="btn btn--secondary btn--sm">返却する</button>
+                                    </form>
+                                </div>
+                                <!-- 故障中: 操作なし -->
+                                <span th:if="${item.status.name() == 'BROKEN'}" class="cell-muted">操作不可</span>
+                            </td>
+                            <td class="cell-actions">
+                                <a class="btn btn--ghost btn--sm" th:href="@{/equipment/{id}(id=${item.id})}">詳細</a>
+                                <a sec:authorize="hasRole('ADMIN')" class="btn btn--secondary btn--sm"
+                                   th:href="@{/equipment/{id}/edit(id=${item.id})}">編集</a>
+                                <form sec:authorize="hasRole('ADMIN')"
+                                      th:action="@{/equipment/{id}/delete(id=${item.id})}" method="post"
+                                      onsubmit="return confirm('この備品を削除しますか？')">
+                                    <button type="submit" class="btn btn--danger btn--sm">削除</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </body>
 </html>

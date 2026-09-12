@@ -16,8 +16,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import jp.co.example.equipmentmanagement.entity.Employee;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
+import jp.co.example.equipmentmanagement.repository.EmployeeRepository;
 import jp.co.example.equipmentmanagement.repository.EquipmentRepository;
 
 /**
@@ -35,6 +37,9 @@ class LendingControllerTest {
     @Autowired
     private EquipmentRepository equipmentRepository;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
+
     @Test
     @WithMockUser(roles = "USER")
     void USERが利用可の備品を貸出でき状態が貸出中になる() throws Exception {
@@ -42,9 +47,10 @@ class LendingControllerTest {
                 .filter(equipment -> equipment.getStatus() == EquipmentStatus.AVAILABLE)
                 .findFirst()
                 .orElseThrow();
+        Employee employee = employeeRepository.findAll().get(0);
 
         mockMvc.perform(post("/equipment/{id}/lend", available.getId()).with(csrf())
-                        .param("borrowerName", "テスト太郎")
+                        .param("employeeId", employee.getId().toString())
                         .param("dueDate", "2026-12-31"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(flash().attributeExists("message"));
@@ -60,23 +66,24 @@ class LendingControllerTest {
                 .filter(equipment -> equipment.getStatus() == EquipmentStatus.LENT)
                 .findFirst()
                 .orElseThrow();
+        Employee employee = employeeRepository.findAll().get(0);
 
         mockMvc.perform(post("/equipment/{id}/lend", lent.getId()).with(csrf())
-                        .param("borrowerName", "テスト太郎"))
+                        .param("employeeId", employee.getId().toString()))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(flash().attributeExists("error"));
     }
 
     @Test
     @WithMockUser(roles = "USER")
-    void 借用者名が空だと貸出が拒否される() throws Exception {
+    void 借用者が未選択だと貸出が拒否される() throws Exception {
         Equipment available = equipmentRepository.findAll().stream()
                 .filter(equipment -> equipment.getStatus() == EquipmentStatus.AVAILABLE)
                 .findFirst()
                 .orElseThrow();
 
         mockMvc.perform(post("/equipment/{id}/lend", available.getId()).with(csrf())
-                        .param("borrowerName", ""))
+                        .param("employeeId", ""))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(flash().attributeExists("error"));
 

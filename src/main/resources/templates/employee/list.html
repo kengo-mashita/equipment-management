@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>社員一覧 - 備品・機材管理</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header('employees')}"></header>
+
+    <main class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">社員一覧</h1>
+                <p class="page-subtitle">貸出時の借用者として選択できる社員マスタ</p>
+            </div>
+            <div class="page-actions" sec:authorize="hasRole('ADMIN')">
+                <a class="btn btn--primary" th:href="@{/employees/new}">＋ 新規登録</a>
+            </div>
+        </div>
+
+        <p class="alert alert--success" th:if="${message}" th:text="${message}"></p>
+        <p class="alert alert--error" th:if="${error}" th:text="${error}"></p>
+
+        <section class="card">
+            <div class="card__header">
+                <h2 class="card__title">社員リスト</h2>
+                <span class="card__meta" th:text="'全 ' + ${#lists.size(employeeList)} + ' 件'"></span>
+            </div>
+
+            <div class="empty-state" th:if="${#lists.isEmpty(employeeList)}">
+                <p class="empty-state__title">登録されている社員がありません</p>
+                <p>社員を登録すると、貸出時に借用者として選択できるようになります。</p>
+            </div>
+
+            <div class="table-wrapper" th:unless="${#lists.isEmpty(employeeList)}">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>社員番号</th>
+                            <th>氏名</th>
+                            <th>部署</th>
+                            <th class="cell-actions" sec:authorize="hasRole('ADMIN')">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${employeeList}">
+                            <td class="cell-mono" th:text="${item.employeeNumber}"></td>
+                            <td><strong th:text="${item.name}"></strong></td>
+                            <td>
+                                <span th:if="${item.department != null}" th:text="${item.department}"></span>
+                                <span th:if="${item.department == null}" class="cell-muted">-</span>
+                            </td>
+                            <td class="cell-actions" sec:authorize="hasRole('ADMIN')">
+                                <a class="btn btn--secondary btn--sm" th:href="@{/employees/{id}/edit(id=${item.id})}">編集</a>
+                                <form th:action="@{/employees/{id}/delete(id=${item.id})}" method="post"
+                                      onsubmit="return confirm('この社員を削除しますか？')">
+                                    <button type="submit" class="btn btn--danger btn--sm">削除</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

@@ -10,9 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jp.co.example.equipmentmanagement.dto.LendingForm;
+import jp.co.example.equipmentmanagement.entity.Employee;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
 import jp.co.example.equipmentmanagement.entity.Lending;
+import jp.co.example.equipmentmanagement.repository.EmployeeRepository;
 import jp.co.example.equipmentmanagement.repository.EquipmentRepository;
 import jp.co.example.equipmentmanagement.repository.LendingRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +25,12 @@ public class LendingService {
 
     private final LendingRepository lendingRepository;
     private final EquipmentRepository equipmentRepository;
+    private final EmployeeRepository employeeRepository;
 
     /**
      * 備品の貸出登録。「利用可」の備品のみ貸出でき、登録すると備品は自動的に「貸出中」になる。
      * 1備品につき有効な貸出記録は同時に1件のみという不変条件は、statusチェックによって担保される
-     * （statusが「利用可」であれば、有効な貸出記録は存在し得ない）。
+     * （statusが「利用可」であれば、有効な貸出記録は存在し得ない）。借用者は社員マスタから選択する。
      */
     @Transactional
     public void lend(Long equipmentId, LendingForm form) {
@@ -38,9 +41,12 @@ public class LendingService {
             throw new EquipmentNotAvailableException(equipment);
         }
 
+        Employee employee = employeeRepository.findById(form.getEmployeeId())
+                .orElseThrow(() -> new EmployeeNotFoundException(form.getEmployeeId()));
+
         Lending lending = Lending.builder()
                 .equipment(equipment)
-                .borrowerName(form.getBorrowerName())
+                .employee(employee)
                 .dueDate(form.getDueDate())
                 .build();
         lendingRepository.save(lending);

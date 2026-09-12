@@ -21,10 +21,13 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/h2-console/**").permitAll()
+                .requestMatchers("/login", "/css/**", "/h2-console/**").permitAll()
                 // 備品の登録・編集・削除はADMINのみ。貸出・返却はADMIN/USER共通のため対象外（4.1節）。
                 .requestMatchers(HttpMethod.GET, "/equipment/new", "/equipment/*/edit").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/equipment", "/equipment/*/edit", "/equipment/*/delete").hasRole("ADMIN")
+                // 社員マスタの登録・編集・削除はADMINのみ。閲覧（貸出時の選択用）はADMIN/USER共通。
+                .requestMatchers(HttpMethod.GET, "/employees/new", "/employees/*/edit").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/employees", "/employees/*/edit", "/employees/*/delete").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form

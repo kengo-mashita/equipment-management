@@ -3,45 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <title>貸出履歴 - 備品・機材管理</title>
-    <style>
-        body { font-family: sans-serif; margin: 0; }
-        main { padding: 16px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 16px; }
-        th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
-        th { background: #f0f0f0; }
-        .empty { color: #666; margin-top: 16px; }
-        .not-returned { color: #b3261e; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
 <body>
-    <header th:replace="~{fragments/header :: header}"></header>
+    <header th:replace="~{fragments/header :: header('lendings')}"></header>
 
-    <main>
-        <h1>貸出履歴</h1>
+    <main class="container">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">貸出履歴</h1>
+                <p class="page-subtitle">返却済み・未返却を含むすべての貸出記録</p>
+            </div>
+        </div>
 
-        <p class="empty" th:if="${#lists.isEmpty(lendingList)}">貸出記録がありません。</p>
+        <section class="card">
+            <div class="card__header">
+                <h2 class="card__title">貸出記録</h2>
+                <span class="card__meta" th:text="'全 ' + ${#lists.size(lendingList)} + ' 件'"></span>
+            </div>
 
-        <table th:unless="${#lists.isEmpty(lendingList)}">
-            <thead>
-                <tr>
-                    <th>備品名</th>
-                    <th>借用者名</th>
-                    <th>貸出日時</th>
-                    <th>返却予定日</th>
-                    <th>返却日時</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="record : ${lendingList}">
-                    <td th:text="${record.equipment.name}"></td>
-                    <td th:text="${record.borrowerName}"></td>
-                    <td th:text="${#temporals.format(record.lentAt, 'yyyy-MM-dd HH:mm')}"></td>
-                    <td th:text="${record.dueDate != null ? record.dueDate : '-'}"></td>
-                    <td th:if="${record.returnedAt != null}" th:text="${#temporals.format(record.returnedAt, 'yyyy-MM-dd HH:mm')}"></td>
-                    <td th:if="${record.returnedAt == null}" class="not-returned">未返却</td>
-                </tr>
-            </tbody>
-        </table>
+            <div class="empty-state" th:if="${#lists.isEmpty(lendingList)}">
+                <p class="empty-state__title">貸出記録がありません</p>
+                <p>備品一覧から貸出を登録すると、ここに履歴が表示されます。</p>
+            </div>
+
+            <div class="table-wrapper" th:unless="${#lists.isEmpty(lendingList)}">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>備品名</th>
+                            <th>管理番号</th>
+                            <th>借用者</th>
+                            <th>貸出日時</th>
+                            <th>返却予定日</th>
+                            <th>返却日時</th>
+                            <th>状態</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="record : ${lendingList}">
+                            <td>
+                                <a class="row-link" th:href="@{/equipment/{id}(id=${record.equipment.id})}"
+                                   th:text="${record.equipment.name}"></a>
+                            </td>
+                            <td class="cell-mono" th:text="${record.equipment.assetNumber}"></td>
+                            <td th:text="${record.employee.name}"></td>
+                            <td class="cell-nowrap" th:text="${#temporals.format(record.lentAt, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td class="cell-nowrap">
+                                <span th:if="${record.dueDate != null}" th:text="${record.dueDate}"></span>
+                                <span th:if="${record.dueDate == null}" class="cell-muted">-</span>
+                            </td>
+                            <td class="cell-nowrap">
+                                <span th:if="${record.returnedAt != null}"
+                                      th:text="${#temporals.format(record.returnedAt, 'yyyy-MM-dd HH:mm')}"></span>
+                                <span th:if="${record.returnedAt == null}" class="cell-muted">-</span>
+                            </td>
+                            <td>
+                                <span th:if="${record.returnedAt != null}" class="badge badge--neutral">返却済み</span>
+                                <span th:if="${record.returnedAt == null}" class="badge badge--warning">未返却</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </body>
 </html>

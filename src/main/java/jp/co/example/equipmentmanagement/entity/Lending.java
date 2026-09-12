@@ -22,6 +22,7 @@ import lombok.Setter;
 /**
  * 貸出記録。1備品につき有効な記録（returnedAtがnull）は同時に1件のみ
  * （一意性の担保はLendingServiceの業務ロジックで行う）。
+ * 借用者は社員マスタ（Employee）から選択する。
  */
 @Entity
 @Table(name = "lending")
@@ -40,8 +41,9 @@ public class Lending {
     @JoinColumn(name = "equipment_id", nullable = false)
     private Equipment equipment;
 
-    @Column(name = "borrower_name", nullable = false)
-    private String borrowerName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
 
     @Column(name = "lent_at", nullable = false, updatable = false)
     private LocalDateTime lentAt;

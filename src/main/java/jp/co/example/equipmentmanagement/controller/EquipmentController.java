@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import jp.co.example.equipmentmanagement.dto.EquipmentForm;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
+import jp.co.example.equipmentmanagement.service.EmployeeService;
 import jp.co.example.equipmentmanagement.service.EquipmentDeletionNotAllowedException;
 import jp.co.example.equipmentmanagement.service.EquipmentNotFoundException;
 import jp.co.example.equipmentmanagement.service.EquipmentService;
@@ -33,6 +34,7 @@ public class EquipmentController {
 
     private final EquipmentService equipmentService;
     private final LendingService lendingService;
+    private final EmployeeService employeeService;
 
     @GetMapping
     public String list(@RequestParam(required = false) String name,
@@ -47,6 +49,8 @@ public class EquipmentController {
         model.addAttribute("statuses", EquipmentStatus.values());
         // 「貸出中」の行に借用者名を表示するため、備品ID -> 有効な貸出記録のマップを渡す
         model.addAttribute("activeLendings", lendingService.findActiveLendingsByEquipmentId());
+        // 「利用可」の行の貸出フォームで借用者（社員）を選択させるため、社員一覧を渡す
+        model.addAttribute("employees", employeeService.findAll());
         return "equipment/list";
     }
 

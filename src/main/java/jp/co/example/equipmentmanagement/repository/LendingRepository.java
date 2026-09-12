@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import jp.co.example.equipmentmanagement.entity.Employee;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.Lending;
 
@@ -17,4 +18,6 @@ public interface LendingRepository extends JpaRepository<Lending, Long> {
     List<Lending> findAllByOrderByLentAtDesc();
 
     boolean existsByEquipment(Equipment equipment);
+
+    boolean existsByEmployee(Employee employee);
 }
