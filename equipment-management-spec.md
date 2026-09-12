@@ -37,7 +37,7 @@
 | レイヤー | 技術 |
 |---|---|
 | 言語 | Java 21（LTS） |
-| フレームワーク | Spring Boot 3.5系（最新パッチバージョン） |
+| フレームワーク | Spring Boot 4.1系 |
 | ビルドツール | Maven |
 | 認証 | Spring Security（フォームログイン） |
 | テンプレートエンジン | Thymeleaf（サーバーサイドレンダリング） |
@@ -51,10 +51,10 @@
 |---|---|
 | Project | Maven |
 | Language | Java |
-| Spring Boot | 3.5系（最新パッチ） |
-| Group | `com.example` |
+| Spring Boot | 4.1系 |
+| Group | `jp.co.example` |
 | Artifact | `equipment-management` |
-| Package name | `com.example.equipmentmanagement` |
+| Package name | `jp.co.example.equipmentmanagement` |
 | Packaging | Jar |
 | Java | 21 |
 
