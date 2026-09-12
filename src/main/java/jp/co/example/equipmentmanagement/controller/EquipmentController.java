@@ -50,6 +50,14 @@ public class EquipmentController {
         return "equipment/list";
     }
 
+    @GetMapping("/{id}")
+    public String detail(@PathVariable Long id, Model model) {
+        Equipment equipment = equipmentService.findById(id);
+        model.addAttribute("equipment", equipment);
+        model.addAttribute("activeLending", lendingService.findActiveLendingsByEquipmentId().get(id));
+        return "equipment/detail";
+    }
+
     @GetMapping("/new")
     public String newForm(Model model) {
         model.addAttribute("equipmentForm", EquipmentForm.empty());

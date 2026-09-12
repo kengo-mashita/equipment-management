@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>備品詳細 - 備品・機材管理</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; }
+        main { padding: 16px; max-width: 480px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+        th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; }
+        th { background: #f0f0f0; width: 40%; white-space: nowrap; }
+        .actions { margin-top: 20px; }
+        .actions a { margin-right: 12px; }
+    </style>
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+
+    <main>
+        <h1>備品詳細</h1>
+
+        <table>
+            <tr>
+                <th>品名</th>
+                <td th:text="${equipment.name}"></td>
+            </tr>
+            <tr>
+                <th>管理番号</th>
+                <td th:text="${equipment.assetNumber}"></td>
+            </tr>
+            <tr>
+                <th>保管場所</th>
+                <td th:text="${equipment.location != null ? equipment.location : '-'}"></td>
+            </tr>
+            <tr>
+                <th>状態</th>
+                <td th:text="${equipment.status.label}"></td>
+            </tr>
+            <tr th:if="${activeLending != null}">
+                <th>借用者</th>
+                <td th:text="${activeLending.borrowerName}"></td>
+            </tr>
+            <tr>
+                <th>購入日</th>
+                <td th:text="${equipment.purchaseDate != null ? equipment.purchaseDate : '-'}"></td>
+            </tr>
+            <tr>
+                <th>登録日時</th>
+                <td th:text="${#temporals.format(equipment.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+            </tr>
+            <tr>
+                <th>更新日時</th>
+                <td th:text="${#temporals.format(equipment.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
+            </tr>
+        </table>
+
+        <div class="actions">
+            <a th:href="@{/equipment}">一覧に戻る</a>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/equipment/{id}/edit(id=${equipment.id})}">編集</a>
+        </div>
+    </main>
+</body>
+</html>

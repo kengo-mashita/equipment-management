@@ -60,6 +60,7 @@
                     <th>保管場所</th>
                     <th>状態</th>
                     <th>購入日</th>
+                    <th>詳細</th>
                     <th>貸出・返却</th>
                     <th sec:authorize="hasRole('ADMIN')">操作</th>
                 </tr>
@@ -71,6 +72,9 @@
                     <td th:text="${item.location}"></td>
                     <td th:text="${item.status.label}"></td>
                     <td th:text="${item.purchaseDate != null ? item.purchaseDate : '-'}"></td>
+                    <td>
+                        <a th:href="@{/equipment/{id}(id=${item.id})}">詳細</a>
+                    </td>
                     <td>
                         <!-- 利用可: 借用者名・返却予定日を入力して貸出登録 -->
                         <form class="lend-form" th:if="${item.status.name() == 'AVAILABLE'}"
