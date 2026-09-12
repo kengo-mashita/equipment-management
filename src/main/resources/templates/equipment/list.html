@@ -92,6 +92,10 @@
                     </td>
                     <td sec:authorize="hasRole('ADMIN')">
                         <a th:href="@{/equipment/{id}/edit(id=${item.id})}">編集</a>
+                        <form th:action="@{/equipment/{id}/delete(id=${item.id})}" method="post" style="display:inline;"
+                              onsubmit="return confirm('この備品を削除しますか？')">
+                            <button type="submit">削除</button>
+                        </form>
                     </td>
                 </tr>
             </tbody>

@@ -11,6 +11,7 @@ import jp.co.example.equipmentmanagement.dto.EquipmentForm;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
 import jp.co.example.equipmentmanagement.repository.EquipmentRepository;
+import jp.co.example.equipmentmanagement.repository.LendingRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
+    private final LendingRepository lendingRepository;
 
     /**
      * 品名（部分一致）・状態（完全一致）で備品を絞り込む。
@@ -72,6 +74,19 @@ public class EquipmentService {
         }
 
         return equipment;
+    }
+
+    /**
+     * 備品を削除する。貸出履歴（Lending）が存在する場合は参照整合性のため削除を拒否する
+     * （Lending.equipmentは必須の外部キーであり、カスケード削除は設定していないため）。
+     */
+    @Transactional
+    public void delete(Long id) {
+        Equipment equipment = findById(id);
+        if (lendingRepository.existsByEquipment(equipment)) {
+            throw new EquipmentDeletionNotAllowedException(equipment);
+        }
+        equipmentRepository.delete(equipment);
     }
 
     /**

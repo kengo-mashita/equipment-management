@@ -15,4 +15,6 @@ public interface LendingRepository extends JpaRepository<Lending, Long> {
     List<Lending> findAllByReturnedAtIsNull();
 
     List<Lending> findAllByOrderByLentAtDesc();
+
+    boolean existsByEquipment(Equipment equipment);
 }

@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import jp.co.example.equipmentmanagement.dto.EquipmentForm;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
+import jp.co.example.equipmentmanagement.service.EquipmentDeletionNotAllowedException;
 import jp.co.example.equipmentmanagement.service.EquipmentNotFoundException;
 import jp.co.example.equipmentmanagement.service.EquipmentService;
 import jp.co.example.equipmentmanagement.service.LendingService;
@@ -106,8 +107,15 @@ public class EquipmentController {
         return "redirect:/equipment";
     }
 
-    @ExceptionHandler(EquipmentNotFoundException.class)
-    public String handleNotFound(EquipmentNotFoundException ex, RedirectAttributes redirectAttributes) {
+    @PostMapping("/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        equipmentService.delete(id);
+        redirectAttributes.addFlashAttribute("message", "備品を削除しました");
+        return "redirect:/equipment";
+    }
+
+    @ExceptionHandler({ EquipmentNotFoundException.class, EquipmentDeletionNotAllowedException.class })
+    public String handleEquipmentError(RuntimeException ex, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("error", ex.getMessage());
         return "redirect:/equipment";
     }
