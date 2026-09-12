@@ -13,6 +13,9 @@
         form.search label { margin-right: 4px; }
         form.search input, form.search select { margin-right: 16px; }
         .empty { color: #666; margin-top: 16px; }
+        .message { padding: 8px 12px; border-radius: 4px; }
+        .message.success { background: #eaf7ea; color: #256029; }
+        .message.error { background: #fdecea; color: #b3261e; }
     </style>
 </head>
 <body>
@@ -20,6 +23,9 @@
 
     <main>
         <h1>備品一覧</h1>
+
+        <p class="message success" th:if="${message}" th:text="${message}"></p>
+        <p class="message error" th:if="${error}" th:text="${error}"></p>
 
         <p sec:authorize="hasRole('ADMIN')">
             <a th:href="@{/equipment/new}">＋ 新規登録</a>

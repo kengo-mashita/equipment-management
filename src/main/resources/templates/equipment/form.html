@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${equipmentForm.id == null} ? '備品登録 - 備品・機材管理' : '備品編集 - 備品・機材管理'">備品フォーム</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; }
+        main { padding: 16px; max-width: 480px; }
+        .field { margin-top: 12px; }
+        .field label { display: block; margin-bottom: 4px; }
+        .field input, .field select { width: 100%; box-sizing: border-box; padding: 6px; }
+        .field-error { color: #b3261e; font-size: 0.85rem; margin-top: 4px; }
+        .readonly-status { padding: 6px; background: #f0f0f0; border-radius: 4px; }
+        .actions { margin-top: 20px; }
+        .actions button { padding: 8px 16px; }
+        .actions a { margin-left: 12px; }
+    </style>
+</head>
+<body>
+    <header th:replace="~{fragments/header :: header}"></header>
+
+    <main>
+        <h1 th:text="${equipmentForm.id == null} ? '備品登録' : '備品編集'">備品フォーム</h1>
+
+        <form th:action="${equipmentForm.id == null} ? @{/equipment} : @{/equipment/{id}/edit(id=${equipmentForm.id})}"
+              th:object="${equipmentForm}" method="post">
+
+            <div class="field">
+                <label for="name">品名</label>
+                <input type="text" id="name" th:field="*{name}">
+                <p class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
+            </div>
+
+            <div class="field">
+                <label for="assetNumber">管理番号</label>
+                <input type="text" id="assetNumber" th:field="*{assetNumber}">
+                <p class="field-error" th:if="${#fields.hasErrors('assetNumber')}" th:errors="*{assetNumber}"></p>
+            </div>
+
+            <div class="field">
+                <label for="location">保管場所</label>
+                <input type="text" id="location" th:field="*{location}">
+            </div>
+
+            <div class="field" th:if="${currentStatus == null || currentStatus.name() != 'LENT'}">
+                <label for="status">状態</label>
+                <select id="status" th:field="*{status}">
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s.label}"></option>
+                </select>
+            </div>
+            <div class="field" th:if="${currentStatus != null && currentStatus.name() == 'LENT'}">
+                <label>状態</label>
+                <p class="readonly-status">貸出中（返却操作でのみ解除されます）</p>
+            </div>
+
+            <div class="field">
+                <label for="purchaseDate">購入日</label>
+                <input type="date" id="purchaseDate" th:field="*{purchaseDate}">
+            </div>
+
+            <div class="actions">
+                <button type="submit">保存</button>
+                <a th:href="@{/equipment}">キャンセル</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>
