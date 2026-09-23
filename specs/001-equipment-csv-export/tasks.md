@@ -109,10 +109,10 @@ description: "Task list for 備品一覧のCSVエクスポート"
 
 **Purpose**: 全ストーリー横断の仕上げと完了条件の確認
 
-- [ ] T021 [P] 追加・変更したクラス（`MAIN/service/CsvFormatter.java`, `MAIN/service/EquipmentCsvExportService.java`, `MAIN/service/EquipmentService.java`, `MAIN/controller/EquipmentController.java`）を見直し、業務ルール（無害化の対象・順序、借用者の判定、不正条件の扱い）に意図が伝わるコメント／Javadoc があること、Controller に業務判断が入っていないこと（憲章 I）を確認・修正する
-- [ ] T022 [P] 制約の最終確認: `git diff feature/sdd-spec-kit -- pom.xml src/main/java/jp/co/example/equipmentmanagement/config` が空（新規依存・Security 設定変更なし）であること、`src/main/resources/templates/equipment/list.html` に `<script>` や `onclick` 等の JavaScript が含まれないこと（憲章 II）を確認する
-- [ ] T023 `./mvnw clean test` を実行し、全テストが成功（`BUILD SUCCESS`）することを確認する（憲章 III の完了条件）
-- [ ] T024 `./mvnw spring-boot:run` で起動し、`specs/001-equipment-csv-export/quickstart.md` のシナリオ S1〜S5（および任意で §4 の curl による BOM・ヘッダー確認）を実施して期待結果と一致することを確認する。Excel での確認ができない場合はその旨を報告する
+- [X] T021 [P] 追加・変更したクラス（`MAIN/service/CsvFormatter.java`, `MAIN/service/EquipmentCsvExportService.java`, `MAIN/service/EquipmentService.java`, `MAIN/controller/EquipmentController.java`）を見直し、業務ルール（無害化の対象・順序、借用者の判定、不正条件の扱い）に意図が伝わるコメント／Javadoc があること、Controller に業務判断が入っていないこと（憲章 I）を確認・修正する
+- [X] T022 [P] 制約の最終確認: `git diff feature/sdd-spec-kit -- pom.xml src/main/java/jp/co/example/equipmentmanagement/config` が空（新規依存・Security 設定変更なし）であること、`src/main/resources/templates/equipment/list.html` に `<script>` や `onclick` 等の JavaScript が含まれないこと（憲章 II）を確認する
+- [X] T023 `./mvnw clean test` を実行し、全テストが成功（`BUILD SUCCESS`）することを確認する（憲章 III の完了条件）
+- [X] T024 `./mvnw spring-boot:run` で起動し、`specs/001-equipment-csv-export/quickstart.md` のシナリオ S1〜S5（および任意で §4 の curl による BOM・ヘッダー確認）を実施して期待結果と一致することを確認する。Excel での確認ができない場合はその旨を報告する
 
 ---
 
