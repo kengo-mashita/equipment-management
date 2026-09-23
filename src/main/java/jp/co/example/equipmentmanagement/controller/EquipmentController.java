@@ -1,5 +1,12 @@
 package jp.co.example.equipmentmanagement.controller;
 
+import java.time.LocalDateTime;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -17,9 +24,11 @@ import jakarta.validation.Valid;
 import jp.co.example.equipmentmanagement.dto.EquipmentForm;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
+import jp.co.example.equipmentmanagement.service.CsvExportException;
 import jp.co.example.equipmentmanagement.service.EmployeeService;
 import jp.co.example.equipmentmanagement.service.EquipmentDeletionNotAllowedException;
 import jp.co.example.equipmentmanagement.service.EquipmentNotFoundException;
+import jp.co.example.equipmentmanagement.service.EquipmentCsvExportService;
 import jp.co.example.equipmentmanagement.service.EquipmentService;
 import jp.co.example.equipmentmanagement.service.LendingService;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +38,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EquipmentController {
 
+    private static final Logger log = LoggerFactory.getLogger(EquipmentController.class);
+
+    private static final MediaType TEXT_CSV_UTF8 = MediaType.parseMediaType("text/csv;charset=UTF-8");
+
     /** 編集画面・登録画面で選択可能な状態（「貸出中」は貸出操作でのみ設定されるため除外） */
     private static final EquipmentStatus[] EDITABLE_STATUSES = { EquipmentStatus.AVAILABLE, EquipmentStatus.BROKEN };
 
     private final EquipmentService equipmentService;
     private final LendingService lendingService;
     private final EmployeeService employeeService;
+    private final EquipmentCsvExportService equipmentCsvExportService;
 
     @GetMapping
     public String list(@RequestParam(required = false) String name,
@@ -52,6 +66,24 @@ public class EquipmentController {
         // 「利用可」の行の貸出フォームで借用者（社員）を選択させるため、社員一覧を渡す
         model.addAttribute("employees", employeeService.findAll());
         return "equipment/list";
+    }
+
+    /**
+     * 一覧と同じ検索条件で抽出した備品をCSVファイルとしてダウンロードさせる。
+     * Content-Disposition: attachment によりブラウザは画面遷移せずに保存する（FR-003）。
+     */
+    @GetMapping("/csv")
+    public ResponseEntity<byte[]> downloadCsv(@RequestParam(required = false) String name,
+            @RequestParam(required = false) String status) {
+
+        EquipmentStatus statusFilter = equipmentService.parseStatusFilter(status);
+        byte[] csv = equipmentCsvExportService.export(name, statusFilter);
+        String fileName = equipmentCsvExportService.fileName(LocalDateTime.now());
+
+        return ResponseEntity.ok()
+                .contentType(TEXT_CSV_UTF8)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .body(csv);
     }
 
     @GetMapping("/{id}")
@@ -128,6 +160,14 @@ public class EquipmentController {
 
     @ExceptionHandler({ EquipmentNotFoundException.class, EquipmentDeletionNotAllowedException.class })
     public String handleEquipmentError(RuntimeException ex, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        return "redirect:/equipment";
+    }
+
+    /** CSV生成中の想定外エラー。原因はログにのみ出力し、画面には利用者向けのメッセージだけを表示する。 */
+    @ExceptionHandler(CsvExportException.class)
+    public String handleCsvExportError(CsvExportException ex, RedirectAttributes redirectAttributes) {
+        log.error("備品一覧CSVの生成に失敗しました", ex);
         redirectAttributes.addFlashAttribute("error", ex.getMessage());
         return "redirect:/equipment";
     }

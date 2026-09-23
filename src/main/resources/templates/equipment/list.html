@@ -15,8 +15,9 @@
                 <h1 class="page-title">備品一覧</h1>
                 <p class="page-subtitle">備品の検索・貸出・返却を行います</p>
             </div>
-            <div class="page-actions" sec:authorize="hasRole('ADMIN')">
-                <a class="btn btn--primary" th:href="@{/equipment/new}">＋ 新規登録</a>
+            <div class="page-actions">
+                <a class="btn btn--secondary" th:href="@{/equipment/csv}">CSVダウンロード</a>
+                <a class="btn btn--primary" sec:authorize="hasRole('ADMIN')" th:href="@{/equipment/new}">＋ 新規登録</a>
             </div>
         </div>
 

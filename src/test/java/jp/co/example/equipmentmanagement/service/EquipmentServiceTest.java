@@ -183,6 +183,28 @@ class EquipmentServiceTest {
         verify(equipmentRepository, never()).delete(any());
     }
 
+    @Test
+    void parseStatusFilter_nullや空文字は条件なしとしてnullを返す() {
+        assertThat(equipmentService.parseStatusFilter(null)).isNull();
+        assertThat(equipmentService.parseStatusFilter("")).isNull();
+    }
+
+    @Test
+    void parseStatusFilter_列挙子名に一致すれば対応する状態を返す() {
+        assertThat(equipmentService.parseStatusFilter("AVAILABLE")).isEqualTo(EquipmentStatus.AVAILABLE);
+        assertThat(equipmentService.parseStatusFilter("LENT")).isEqualTo(EquipmentStatus.LENT);
+        assertThat(equipmentService.parseStatusFilter("BROKEN")).isEqualTo(EquipmentStatus.BROKEN);
+    }
+
+    @Test
+    void parseStatusFilter_列挙子名に一致しない値はInvalidSearchConditionExceptionを投げる() {
+        assertThatThrownBy(() -> equipmentService.parseStatusFilter("UNKNOWN"))
+                .isInstanceOf(InvalidSearchConditionException.class)
+                .hasMessage("検索条件が不正です。条件を指定し直してください。");
+        assertThatThrownBy(() -> equipmentService.parseStatusFilter("available"))
+                .isInstanceOf(InvalidSearchConditionException.class);
+    }
+
     private Equipment equipment(Long id, String name, String assetNumber, EquipmentStatus status) {
         return Equipment.builder()
                 .id(id)

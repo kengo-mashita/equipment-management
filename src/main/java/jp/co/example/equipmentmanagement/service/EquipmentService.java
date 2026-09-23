@@ -33,6 +33,22 @@ public class EquipmentService {
                 .toList();
     }
 
+    /**
+     * 検索条件として受け取った状態の文字列を EquipmentStatus に変換する（FR-017）。
+     * 未指定・空文字は「条件なし」として null を返す。それ以外は列挙子名（AVAILABLE/LENT/BROKEN）との
+     * 完全一致のみを受け付け、小文字や未定義の値は利用者起因の不正な条件として例外にする。
+     */
+    public EquipmentStatus parseStatusFilter(String status) {
+        if (!StringUtils.hasText(status)) {
+            return null;
+        }
+        try {
+            return EquipmentStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidSearchConditionException();
+        }
+    }
+
     public Equipment findById(Long id) {
         return equipmentRepository.findById(id)
                 .orElseThrow(() -> new EquipmentNotFoundException(id));
