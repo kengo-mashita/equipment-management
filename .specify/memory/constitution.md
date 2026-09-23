@@ -1,50 +1,123 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# 備品・機材管理アプリ Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. レイヤードアーキテクチャと責務分離
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- ソースは `jp.co.example.equipmentmanagement` 配下の `controller` / `service` / `repository` /
+  `entity` / `dto` / `config` パッケージに配置しなければならない（MUST）。
+- Controller は HTTP 入出力の変換（フォームバインド、`@Valid` の起動、モデル設定、画面遷移）
+  のみを担い、業務ロジック（貸出可否判定、状態遷移、重複チェック等）を記述してはならない
+  （MUST NOT）。業務ロジックは Service に実装する。
+- Repository は Spring Data JPA によるデータアクセスに専念し、業務判断を含めてはならない。
+- 画面入力・表示専用のデータ構造が必要な場合は `dto` に定義し、Entity をフォームへ直接
+  バインドする設計は正当な理由がない限り避ける（SHOULD）。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: 業務ルールを Service に集約することで、テスト容易性と変更時の影響範囲の
+見通しを確保する。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. サーバーサイドレンダリング（JavaScript不使用）
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+- 画面は Thymeleaf によるサーバーサイドレンダリングで生成しなければならない（MUST）。
+- JavaScript を使用してはならない（MUST NOT）。Ajax・SPA 的な挙動・クライアント側での
+  動的描画は禁止する。画面遷移・操作はすべて `<form>` の GET/POST 送信またはリンクで行う。
+- スタイルは共通 CSS（`static/css/app.css`）で統一し、レスポンシブ対応は CSS（メディア
+  クエリ）のみで実現する。外部 CDN・Web フォントは使用しない。
+- 新機能（例：ファイルのアップロード・ダウンロード）も、標準 HTML フォームと通常の HTTP
+  レスポンスの範囲で実現しなければならない。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale**: ローカル完結・シンプルな業務システムとして、挙動の予測可能性と保守性を優先する。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. 業務ルールのテストによる担保（NON-NEGOTIABLE）
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- Service 層の業務ロジック（貸出可否判定、状態遷移、一意性・重複チェック、参照整合性
+  チェック等）には単体テストを必ず作成しなければならない（MUST）。正常系に加え、主要な
+  異常系（拒否されるべきケース）を含めること。
+- 画面・認可・入力検証の振る舞いは、Controller の結合テスト（MockMvc 等）で検証する
+  （SHOULD）。権限のないロールによる操作が拒否されることは必ずテストする（MUST）。
+- `./mvnw test` がすべて成功しない状態で機能を完了扱いにしてはならない（MUST NOT）。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Rationale**: 業務アプリとしての品質は業務ルールの正しさで決まり、それを継続的に保証できる
+唯一の手段が自動テストである。
+
+### IV. ロールベース認可
+
+- 認証は Spring Security のフォームログインで行い、未ログインのアクセスはログイン画面へ
+  リダイレクトしなければならない（MUST）。
+- ロールは `ROLE_ADMIN` と `ROLE_USER` の 2 種とする。登録・編集・削除などのマスタ更新操作は
+  `ROLE_ADMIN` に限定し、貸出・返却は両ロールに許可する（要件定義書に従う）。
+- 認可はサーバー側（Security 設定またはメソッドセキュリティ）で強制しなければならない（MUST）。
+  画面上のボタン・リンクの非表示は補助であり、それのみに依存してはならない。
+- パスワードは BCrypt 等でハッシュ化して保存する（MUST）。
+
+**Rationale**: UI の出し分けだけでは直接の HTTP リクエストを防げないため、認可は必ず
+サーバー側で担保する。
+
+### V. データ整合性と状態遷移の一元管理
+
+- 備品の状態「貸出中」は貸出・返却操作によってのみ設定・解除され、編集画面等から直接
+  設定できてはならない（MUST NOT）。
+- 1 つの備品に対して有効な貸出記録（`returnedAt` が null）は同時に 1 件のみとする（MUST）。
+- 一意項目（管理番号、社員番号、ユーザー名等）の重複、および参照されているデータ
+  （貸出履歴を持つ備品・社員）の削除は、Service 層で検出して拒否しなければならない（MUST）。
+- 複数エンティティを更新する業務操作（貸出登録・返却等）は単一トランザクション
+  （`@Transactional`）で実行する（MUST）。
+- 状態遷移や可否判定など業務ルールが複雑な箇所には、意図を説明するコメントを付与する（SHOULD）。
+
+**Rationale**: 状態とデータの整合性が崩れると貸出管理そのものが信頼できなくなるため、
+変更経路を Service に一本化する。
+
+### VI. 分かりやすい異常系処理とログ出力
+
+- 入力チェックは `@Valid` と Bean Validation アノテーションで行い、エラーは Thymeleaf の
+  `th:errors` 等で、利用者が原因と対処を理解できる日本語メッセージとして表示しなければ
+  ならない（MUST）。
+- 想定される異常系（存在しない ID へのアクセス、権限のない操作、業務ルール違反、
+  バリデーションエラー）はハンドリングし、スタックトレースを画面に露出してはならない
+  （MUST NOT）。
+- 起動時の初期データ投入状況、および想定外エラーの発生は SLF4J でログ出力する（MUST）。
+
+**Rationale**: 利用者が自己解決できるエラー表示と、開発者が原因を追えるログの両立が
+業務アプリの運用品質を支える。
+
+## 技術的制約
+
+- 言語・基盤：Java 21（LTS）、Spring Boot 4.1.1 系、Maven（`./mvnw`）。
+- 永続化：Spring Data JPA + H2 Database（ファイルモード、プロジェクト内 `./data/`）。
+- 実行環境：WSL 上で直接実行し、Docker は使用しない。外部通信を行わずローカルで完結させる。
+- 起動は `./mvnw spring-boot:run` の 1 コマンドで行えること。
+- 新たなライブラリ・依存関係の追加は、既存スタックで実現できない場合に限り、`plan` で理由を
+  明記したうえで行う（SHOULD）。
+- 命名規則：クラスは `PascalCase`、メソッド・変数は `camelCase`、URL パスはケバブケースかつ
+  リソース名は複数形（例：`/equipment`, `/lendings`）、テンプレートは画面に対応する分かりやすい名前。
+- 要件定義書（`equipment-management-spec.md`）のスコープ外事項（REST API 化、同時アクセス制御、
+  アクセシビリティ対応等）は、仕様で明示的に取り込まない限り実装しない。
+
+## 開発ワークフロー
+
+- 機能追加は spec-kit の手順（`/speckit-specify` → `/speckit-plan` → `/speckit-tasks` →
+  `/speckit-implement`）に従い、各ステップ完了ごとにコミットする。
+- spec-kit 試行はベースブランチ `feature/sdd-spec-kit`（タグ `spec-kit-base`）から
+  `try/<テーマ>-<連番>` ブランチを切って行い、ベースブランチへ直接コミットしない。
+- やり直す場合は既存の試行ブランチを修正せず、ベースから新しい試行ブランチを切る。
+- `plan` 段階で本憲章の各原則への適合を確認（Constitution Check）し、逸脱がある場合は
+  理由と代替案の検討結果を記録する。
+- 実装完了の条件：`./mvnw test` が成功し、`./mvnw spring-boot:run` で起動して対象画面の
+  主要操作を確認できること。
+- コミットは機能単位でよい。
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- 本憲章はプロジェクトの他の慣行に優先する。CLAUDE.md・README・要件定義書と矛盾する場合は、
+  本憲章の改定または該当文書の修正によって解消する。
+- 改定手順：変更内容と理由を明記して本ファイルを更新し、Sync Impact Report で影響範囲を
+  確認したうえでコミットする。
+- バージョニング：セマンティックバージョニングに従う。
+  - MAJOR：原則の削除、または互換性のない再定義。
+  - MINOR：原則・節の追加、またはガイダンスの実質的な拡張。
+  - PATCH：文言の明確化、誤字修正など意味を変えない修正。
+- コンプライアンス確認：`/speckit-plan` の Constitution Check、`/speckit-analyze`、および
+  レビュー時に本憲章への適合を確認する。複雑さの追加は正当化されなければならない。
+- 日常の開発ガイダンスは `CLAUDE.md` を参照する。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-09-23 | **Last Amended**: 2026-09-23
