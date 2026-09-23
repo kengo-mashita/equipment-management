@@ -82,3 +82,13 @@
 
 ### Git運用
 - コミット単位は機能ごとで問題ない
+
+---
+
+## spec-kit試行の運用ルール
+
+- `feature/sdd-spec-kit` はspec-kit試行のベースブランチ（タグ `spec-kit-base`）。直接コミットしない。
+- 試行は必ずベースから新しいブランチ `try/<テーマ>-<連番>`（例：`try/csv-export-01`）を切って行う。
+- spec-kit 1.0.10 の `/speckit-specify` はgitブランチを自動作成しないため、実行前に上記ブランチへ切り替えておく。
+- `/speckit-constitution` → `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement` の各ステップ完了ごとにコミットする。
+- 最初からやり直す場合は、既存の試行ブランチを修正せず、ベースから新しい試行ブランチを切る。
