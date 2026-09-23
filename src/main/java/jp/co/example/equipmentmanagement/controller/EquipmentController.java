@@ -30,6 +30,7 @@ import jp.co.example.equipmentmanagement.service.EquipmentDeletionNotAllowedExce
 import jp.co.example.equipmentmanagement.service.EquipmentNotFoundException;
 import jp.co.example.equipmentmanagement.service.EquipmentCsvExportService;
 import jp.co.example.equipmentmanagement.service.EquipmentService;
+import jp.co.example.equipmentmanagement.service.InvalidSearchConditionException;
 import jp.co.example.equipmentmanagement.service.LendingService;
 import lombok.RequiredArgsConstructor;
 
@@ -160,6 +161,18 @@ public class EquipmentController {
 
     @ExceptionHandler({ EquipmentNotFoundException.class, EquipmentDeletionNotAllowedException.class })
     public String handleEquipmentError(RuntimeException ex, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", ex.getMessage());
+        return "redirect:/equipment";
+    }
+
+    /**
+     * 不正な検索条件（FR-017）。利用者起因のため WARN で記録し、一覧へ戻してメッセージを表示する。
+     * リダイレクト先には検索条件を付けないため、同じ不正条件でのリダイレクトループは起きない。
+     */
+    @ExceptionHandler(InvalidSearchConditionException.class)
+    public String handleInvalidSearchCondition(InvalidSearchConditionException ex,
+            RedirectAttributes redirectAttributes) {
+        log.warn("不正な検索条件が指定されました: {}", ex.getMessage());
         redirectAttributes.addFlashAttribute("error", ex.getMessage());
         return "redirect:/equipment";
     }

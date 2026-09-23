@@ -92,14 +92,14 @@ description: "Task list for 備品一覧のCSVエクスポート"
 
 > **NOTE: 先にテストを書き、実装前に失敗することを確認する**
 
-- [ ] T016 [P] [US2] `TEST/service/EquipmentCsvExportServiceTest.java` に追加する: `export("PC", EquipmentStatus.BROKEN)` が `equipmentService.search("PC", EquipmentStatus.BROKEN)` に引数をそのまま渡すこと（`verify`）、`search` の返却順（例: ID 3, 1, 2 の順で返すモック）がそのまま CSV の行順になること（Service 側で並べ替えない＝一覧と同じ順序、FR-005）
-- [ ] T017 [P] [US2] `TEST/controller/EquipmentCsvExportControllerTest.java` に追加する（テスト内で状態・品名の異なる備品を保存）: `?status=BROKEN` で故障中の備品のみ、`?name=<テスト用の一意な文字列>` で品名部分一致の備品のみ、`?name=...&status=...` で両条件を満たす備品のみ出力される（FR-004）。CSV のデータ行の品名の並びが同条件の `EquipmentService.search` の結果（ID 昇順）と一致する（FR-005）。一致 0 件の条件（例 `?name=存在しない品名`）で 200・BOM + 見出し行のみ（FR-015）。`?name=&status=`（空文字）は条件なしとして全件出力される。`?status=UNKNOWN` と `?status=available` で 302・`redirectedUrl("/equipment")`・`flash().attribute("error", "検索条件が不正です。条件を指定し直してください。")`（FR-017）。`GET /equipment?status=BROKEN` の HTML に含まれる CSV リンクの href が `status=BROKEN` を含む（現在の検索条件の引き継ぎ）
+- [X] T016 [P] [US2] `TEST/service/EquipmentCsvExportServiceTest.java` に追加する: `export("PC", EquipmentStatus.BROKEN)` が `equipmentService.search("PC", EquipmentStatus.BROKEN)` に引数をそのまま渡すこと（`verify`）、`search` の返却順（例: ID 3, 1, 2 の順で返すモック）がそのまま CSV の行順になること（Service 側で並べ替えない＝一覧と同じ順序、FR-005）
+- [X] T017 [P] [US2] `TEST/controller/EquipmentCsvExportControllerTest.java` に追加する（テスト内で状態・品名の異なる備品を保存）: `?status=BROKEN` で故障中の備品のみ、`?name=<テスト用の一意な文字列>` で品名部分一致の備品のみ、`?name=...&status=...` で両条件を満たす備品のみ出力される（FR-004）。CSV のデータ行の品名の並びが同条件の `EquipmentService.search` の結果（ID 昇順）と一致する（FR-005）。一致 0 件の条件（例 `?name=存在しない品名`）で 200・BOM + 見出し行のみ（FR-015）。`?name=&status=`（空文字）は条件なしとして全件出力される。`?status=UNKNOWN` と `?status=available` で 302・`redirectedUrl("/equipment")`・`flash().attribute("error", "検索条件が不正です。条件を指定し直してください。")`（FR-017）。`GET /equipment?status=BROKEN` の HTML に含まれる CSV リンクの href が `status=BROKEN` を含む（現在の検索条件の引き継ぎ）
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] `src/main/resources/templates/equipment/list.html` の「CSVダウンロード」リンクを `th:href="@{/equipment/csv(name=${name},status=${status})}"` に変更し、一覧に**現在適用されている**検索条件（モデル属性 `name` と、列挙型の `status`）を引き継ぐ。検索フォーム内の送信ボタンにはしない（未検索の入力値で出力されるのを防ぐ、R-6）
-- [ ] T019 [US2] `MAIN/controller/EquipmentController.java` に `@ExceptionHandler(InvalidSearchConditionException.class)` を追加し、`redirectAttributes.addFlashAttribute("error", ex.getMessage())` と `redirect:/equipment`（検索条件を付けない＝リダイレクトループ防止）を返す。既存 `handleEquipmentError` と同じ流儀とし、スタックトレースは画面に出さない。不正パラメータは利用者起因のため必要に応じて WARN/INFO レベルでログ出力する
-- [ ] T020 [US2] `./mvnw test` を実行し T016・T017 を含む全テストが成功することを確認する
+- [X] T018 [US2] `src/main/resources/templates/equipment/list.html` の「CSVダウンロード」リンクを `th:href="@{/equipment/csv(name=${name},status=${status})}"` に変更し、一覧に**現在適用されている**検索条件（モデル属性 `name` と、列挙型の `status`）を引き継ぐ。検索フォーム内の送信ボタンにはしない（未検索の入力値で出力されるのを防ぐ、R-6）
+- [X] T019 [US2] `MAIN/controller/EquipmentController.java` に `@ExceptionHandler(InvalidSearchConditionException.class)` を追加し、`redirectAttributes.addFlashAttribute("error", ex.getMessage())` と `redirect:/equipment`（検索条件を付けない＝リダイレクトループ防止）を返す。既存 `handleEquipmentError` と同じ流儀とし、スタックトレースは画面に出さない。不正パラメータは利用者起因のため必要に応じて WARN/INFO レベルでログ出力する
+- [X] T020 [US2] `./mvnw test` を実行し T016・T017 を含む全テストが成功することを確認する
 
 **Checkpoint**: US1・US2 の両方が独立して動作する
 

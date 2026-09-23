@@ -2,6 +2,7 @@ package jp.co.example.equipmentmanagement.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
@@ -101,6 +102,30 @@ class EquipmentCsvExportServiceTest {
                 + "タブレット,EQ-0002,会議室B,貸出中,,\r\n"
                 + "モニター,EQ-0003,倉庫,利用可,,\r\n"
                 + "プリンター,EQ-0004,倉庫,故障中,,\r\n");
+    }
+
+    @Test
+    void export_検索条件はそのままEquipmentServiceに渡される() {
+        when(equipmentService.search("PC", EquipmentStatus.BROKEN)).thenReturn(List.of());
+        when(lendingService.findActiveLendingsByEquipmentId()).thenReturn(Map.of());
+
+        exportService.export("PC", EquipmentStatus.BROKEN);
+
+        verify(equipmentService).search("PC", EquipmentStatus.BROKEN);
+    }
+
+    @Test
+    void export_行順は検索結果の順序のまま並べ替えない() {
+        Equipment third = equipment(3L, "品C", "EQ-0003", null, EquipmentStatus.AVAILABLE, null);
+        Equipment first = equipment(1L, "品A", "EQ-0001", null, EquipmentStatus.AVAILABLE, null);
+        Equipment second = equipment(2L, "品B", "EQ-0002", null, EquipmentStatus.AVAILABLE, null);
+        when(equipmentService.search(null, null)).thenReturn(List.of(third, first, second));
+        when(lendingService.findActiveLendingsByEquipmentId()).thenReturn(Map.of());
+
+        assertThat(body(exportService.export(null, null))).isEqualTo(HEADER
+                + "品C,EQ-0003,,利用可,,\r\n"
+                + "品A,EQ-0001,,利用可,,\r\n"
+                + "品B,EQ-0002,,利用可,,\r\n");
     }
 
     @Test
