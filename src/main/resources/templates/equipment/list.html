@@ -52,7 +52,7 @@
                 <h2 class="card__title">備品リスト</h2>
                 <div class="card__header-actions">
                     <span class="card__meta" th:text="'全 ' + ${#lists.size(equipmentList)} + ' 件'"></span>
-                    <a class="btn btn--secondary btn--sm" th:href="@{/equipment/csv}">CSVダウンロード</a>
+                    <a class="btn btn--secondary btn--sm" th:href="@{/equipment/csv(name=${name},status=${status})}">CSVダウンロード</a>
                 </div>
             </div>
 

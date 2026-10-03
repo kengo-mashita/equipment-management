@@ -50,7 +50,7 @@ public class EquipmentController {
             @RequestParam(required = false) String status,
             Model model) {
 
-        EquipmentStatus statusFilter = StringUtils.hasText(status) ? EquipmentStatus.valueOf(status) : null;
+        EquipmentStatus statusFilter = parseStatus(status);
 
         model.addAttribute("equipmentList", equipmentService.search(name, statusFilter));
         model.addAttribute("name", name);
@@ -63,9 +63,14 @@ public class EquipmentController {
         return "equipment/list";
     }
 
+    /**
+     * 一覧画面のリンクには描画時（＝最後に検索を実行した時）の検索条件が埋め込まれるため、
+     * 表示中の一覧と同じ内容がCSVに出力される。
+     */
     @GetMapping("/csv")
-    public ResponseEntity<byte[]> downloadCsv() {
-        byte[] csv = equipmentCsvExportService.export(null, null);
+    public ResponseEntity<byte[]> downloadCsv(@RequestParam(required = false) String name,
+            @RequestParam(required = false) String status) {
+        byte[] csv = equipmentCsvExportService.export(name, parseStatus(status));
         return ResponseEntity.ok()
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
@@ -144,6 +149,28 @@ public class EquipmentController {
     public String delete(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         equipmentService.delete(id);
         redirectAttributes.addFlashAttribute("message", "備品を削除しました");
+        return "redirect:/equipment";
+    }
+
+    /**
+     * 検索条件の状態値を解釈する。空なら条件なし（null）。
+     * 列挙値以外は InvalidSearchConditionException となり、handleInvalidSearchCondition で処理される。
+     */
+    private EquipmentStatus parseStatus(String status) {
+        if (!StringUtils.hasText(status)) {
+            return null;
+        }
+        try {
+            return EquipmentStatus.valueOf(status);
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidSearchConditionException(status, ex);
+        }
+    }
+
+    /** URLの直接編集などで不正な状態値が指定された場合、システムエラー画面ではなく一覧にエラーを表示する */
+    @ExceptionHandler(InvalidSearchConditionException.class)
+    public String handleInvalidSearchCondition(RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("error", "検索条件が不正です");
         return "redirect:/equipment";
     }
 

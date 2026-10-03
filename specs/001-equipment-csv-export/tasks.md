@@ -107,7 +107,7 @@ Excelで開くと全備品が文字化けなく1行1件で並ぶ（quickstart.md
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T009 [US2] `TEST/controller/EquipmentCsvControllerTest.java` にテストを追加する（depends on T003）:
+- [X] T009 [US2] `TEST/controller/EquipmentCsvControllerTest.java` にテストを追加する（depends on T003）:
   - `GET /equipment/csv?status=BROKEN` のボディ行（見出し除く）がすべて状態 `故障中` で、件数が `EquipmentService.search(null, EquipmentStatus.BROKEN)` の件数と一致する
   - `GET /equipment/csv?name=<初期データの品名の一部>` が品名部分一致の結果だけを出力する
   - `name` と `status` の両方指定で、両条件を満たす行だけが一覧と同じ順序で出力される
@@ -119,10 +119,11 @@ Excelで開くと全備品が文字化けなく1行1件で並ぶ（quickstart.md
 
 ### Implementation for User Story 2
 
-- [ ] T010 [US2] `MAIN/controller/EquipmentController.java` で、状態パラメータの解釈を private メソッド（例：`parseStatus(String status)`：空なら null、それ以外は `EquipmentStatus.valueOf`）に共通化し、既存の `list` と `/csv` ハンドラの両方から使う。`/csv` ハンドラに `@RequestParam(required = false) String name, @RequestParam(required = false) String status` を追加し、`export(name, parseStatus(status))` を呼ぶ（depends on T005）
-- [ ] T011 [US2] `MAIN/controller/EquipmentController.java` に `@ExceptionHandler(IllegalArgumentException.class)` を追加し、フラッシュ属性 `error` に「検索条件が不正です」を設定して `redirect:/equipment` を返す（パラメータなしへのリダイレクトなのでループしない）。不正な検索条件のための処理である旨をコメントで記載する（research.md R7、depends on T010）
-- [ ] T012 [US2] `src/main/resources/templates/equipment/list.html` の「CSVダウンロード」リンクを `th:href="@{/equipment/csv(name=${name},status=${status})}"` に変更し、Modelの `name`・`status`（＝描画時に実行済みの検索条件）を埋め込む。検索フォームの入力値は使わない（Clarifications 2026-10-03、research.md R5、depends on T006）
-- [ ] T013 [US2] `./mvnw test` を実行し、T009 を含む全テストが成功することを確認する
+- [X] T010 [US2] `MAIN/controller/EquipmentController.java` で、状態パラメータの解釈を private メソッド（例：`parseStatus(String status)`：空なら null、それ以外は `EquipmentStatus.valueOf`）に共通化し、既存の `list` と `/csv` ハンドラの両方から使う。`/csv` ハンドラに `@RequestParam(required = false) String name, @RequestParam(required = false) String status` を追加し、`export(name, parseStatus(status))` を呼ぶ（depends on T005）
+- [X] T011 [US2] `MAIN/controller/EquipmentController.java` に `@ExceptionHandler(IllegalArgumentException.class)` を追加し、フラッシュ属性 `error` に「検索条件が不正です」を設定して `redirect:/equipment` を返す（パラメータなしへのリダイレクトなのでループしない）。不正な検索条件のための処理である旨をコメントで記載する（research.md R7、depends on T010）
+  - 実装時の変更：`IllegalArgumentException` を Controller 全体で捕捉すると、他の操作で起きた想定外の例外まで「検索条件が不正です」に化けてログにも残らないため、`parseStatus` で専用の `MAIN/controller/InvalidSearchConditionException.java` に変換し、そのハンドラのみを追加した
+- [X] T012 [US2] `src/main/resources/templates/equipment/list.html` の「CSVダウンロード」リンクを `th:href="@{/equipment/csv(name=${name},status=${status})}"` に変更し、Modelの `name`・`status`（＝描画時に実行済みの検索条件）を埋め込む。検索フォームの入力値は使わない（Clarifications 2026-10-03、research.md R5、depends on T006）
+- [X] T013 [US2] `./mvnw test` を実行し、T009 を含む全テストが成功することを確認する
 
 **Checkpoint**: US1・US2 ともに動作し、テストで担保されている
 
