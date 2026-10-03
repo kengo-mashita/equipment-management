@@ -1,50 +1,92 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# 備品・機材管理アプリ Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. サーバーサイドレンダリング・JavaScript不使用（NON-NEGOTIABLE）
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- 画面はThymeleafによるサーバーサイドレンダリングで生成しなければならない（MUST）。
+- JavaScriptを使用してはならない（MUST NOT）。Ajax・SPA的な挙動・クライアント側での動的DOM操作は禁止する。
+- 画面遷移・データ送信は通常のHTTPリクエスト（リンクによるGET、`<form>`によるGET/POST）のみで行う（MUST）。
+  ファイルダウンロード等もリンクまたはフォーム送信で実現する。
+- スタイリングは共通CSS（`static/css/app.css`）で統一し、レスポンシブ対応はCSSメディアクエリのみで行う（MUST）。
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**根拠**: 本アプリはシンプルな業務アプリとして、ブラウザ側の状態を持たない構成で保守性と予測可能性を確保する。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. レイヤードアーキテクチャと責務分離
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+- パッケージ構成は `jp.co.example.equipmentmanagement` 配下の
+  `controller` / `service` / `repository` / `entity` / `dto` / `config` に従わなければならない（MUST）。
+- Controllerは入出力の変換（リクエストパラメータ・フォームの受け取り、モデル設定、画面遷移）に専念し、
+  業務ロジックを記述してはならない（MUST NOT）。
+- 貸出可否判定・状態遷移・重複チェック・削除制限などの業務ルールはServiceに実装しなければならない（MUST）。
+- Repositoryはデータアクセスに専念する。フォーム入力・表示用のデータはEntityを直接バインドせずDTOを用いる（SHOULD）。
+- URLパスはケバブケース・リソース名は複数形（例：`/equipment`, `/lendings`）、
+  テンプレートは画面に対応する分かりやすい名前（例：`equipment_list.html`）とする（MUST）。
+- 業務ルールが複雑な箇所には、意図が伝わるコメントを付与する（MUST）。
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**根拠**: 責務を層ごとに分離することで、業務ルールを単体テストで検証可能にし、変更の影響範囲を局所化する。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. 業務ルールのテスト担保
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- Service層の業務ロジック（貸出可否判定、状態遷移、重複チェック、削除制限など）は単体テストで担保しなければならない（MUST）。
+- Controller層はMockMvcによる結合テストを作成し、ロール別のアクセス制御・バリデーションエラー時の挙動を検証しなければならない（MUST）。
+- 結合テストはインメモリH2で実行し、開発用DBファイル（`./data/`）を汚してはならない（MUST NOT）。
+- 新機能・変更はマージ前に `./mvnw test` が全件成功していなければならない（MUST）。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**根拠**: 状態遷移や参照整合性などの業務ルールは画面操作だけでは網羅確認が難しく、回帰をテストで防ぐ必要がある。
+
+### IV. ロールベースのアクセス制御
+
+- 認証はSpring Securityのフォームログインで行い、ロールは `ROLE_ADMIN` と `ROLE_USER` の2種とする（MUST）。
+- 権限制御はサーバー側（Spring Securityの設定またはメソッドセキュリティ）で強制しなければならない（MUST）。
+  画面上のボタン・リンクの非表示のみで権限制御を代替してはならない（MUST NOT）。
+- 権限のない操作は画面上でも該当ボタン・リンクを非表示にする（SHOULD）。
+- 新しい画面・エンドポイントを追加する際は、仕様でアクセス可能ロールを明示し、テストで検証しなければならない（MUST）。
+- パスワードはBCrypt等でハッシュ化して保存しなければならない（MUST）。
+
+**根拠**: URL直打ち等による権限外操作を防ぐため、表示制御とアクセス制御を分けて扱う。
+
+### V. ローカル完結とシンプルさ
+
+- アプリはWSL上で `./mvnw spring-boot:run` の1コマンドで起動できなければならない（MUST）。Dockerは使用しない。
+- DBはH2（ファイルモード、組み込み）とし、外部DBサーバー・外部通信・外部CDN・Webフォントに依存してはならない（MUST NOT）。
+- 想定は少量データ（数十件程度）・単一利用者であり、ページネーション・排他制御・性能最適化は
+  仕様で明示的に要求されない限り導入しない（YAGNI）。
+- 新しい依存ライブラリの追加は、標準機能（Spring Boot / Java標準ライブラリ）で実現できない理由を
+  計画（plan）に記載した場合に限る（MUST）。
+
+**根拠**: 開発者本人が手元で即座に起動・検証できる状態を保ち、過剰設計による保守コストを避ける。
+
+## 品質基準（入力検証・例外処理・ログ）
+
+- 入力チェックは `@Valid` + Bean Validationアノテーションで行い、エラーはThymeleafの `th:errors` 等で
+  利用者が原因を理解できる日本語メッセージとして画面に表示しなければならない（MUST）。
+- 想定される異常系（存在しないIDへのアクセス、権限のない操作、バリデーションエラー、業務ルール違反）は
+  ハンドリングし、スタックトレースではなく分かりやすいエラー表示を行わなければならない（MUST）。
+- 業務ルール違反は意味のある独自例外（例：`EquipmentNotAvailableException`）としてServiceから送出する（SHOULD）。
+- 起動時の初期データ投入状況、想定外エラーの発生はログ出力しなければならない（MUST）。
+- 「貸出中」状態は貸出・返却操作を通じてのみ遷移させ、編集画面等から直接設定させてはならない（MUST NOT）。
+
+## 開発ワークフロー
+
+- 要件の正は `equipment-management-spec.md`（要件定義書）とし、追加機能の仕様は `specs/` 配下で管理する。
+  要件定義書と矛盾する仕様は、矛盾点を明示したうえで判断を仰がなければならない（MUST）。
+- spec-kitの試行は、ベース（タグ `spec-kit-base`）から切った試行ブランチ上で行い、
+  ベースブランチ `feature/sdd-spec-kit` へ直接コミットしてはならない（MUST NOT）。
+- `/speckit-constitution` → `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-implement`
+  の各ステップ完了ごとにコミットする（MUST）。コミット単位は機能ごとで差し支えない。
+- 計画（plan）作成時は本Constitutionの各原則への適合をチェックし、逸脱がある場合は理由を記載しなければならない（MUST）。
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- 本Constitutionはプロジェクトの他の慣習・ドキュメントに優先する。ただし実行時の詳細な開発ガイダンスは
+  `CLAUDE.md` を参照し、両者が矛盾する場合は本Constitutionを改訂して整合させる。
+- 改訂は `/speckit-constitution` で行い、変更内容・バージョン・改訂日を本ファイルに記録してコミットする。
+- バージョンはセマンティックバージョニングに従う。
+  - MAJOR：原則の削除、または後方互換性のない再定義
+  - MINOR：原則・節の追加、または指針の実質的な拡充
+  - PATCH：文言の明確化・誤字修正など意味を変えない修正
+- 仕様・計画・タスク・実装のレビュー時には、本Constitutionへの適合を確認しなければならない（MUST）。
+  不要な複雑さを導入する場合は、その正当性を計画に明記する。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-10-03 | **Last Amended**: 2026-10-03
