@@ -12,35 +12,17 @@
 
 | レイヤー | 技術 |
 |---|---|
-| 言語 | Java 21（LTS） |
-| フレームワーク | Spring Boot 4.1.1系 |
-| ビルドツール | Maven |
 | 認証 | Spring Security（フォームログイン、ROLE_ADMIN / ROLE_USER） |
 | テンプレートエンジン | Thymeleaf（サーバーサイドレンダリング、JS不使用） |
-| ORM | Spring Data JPA |
 | DB | H2 Database（ファイルモード、組み込み・Docker不使用） |
-| バリデーション | Spring Validation（`@NotBlank`等） |
 
-- Group: `jp.co.example`
-- Artifact / Package: `jp.co.example.equipmentmanagement`
 - フロントエンドはJavaScriptを使用しない。画面遷移はすべて通常のHTTPリクエスト（GET/POST、`<form>`送信）で行う。Ajax・SPA的な実装は禁止。
 
 ---
 
-## 起動コマンド
+## 開発環境
 
 開発環境はWSL（Docker不使用）。
-
-```bash
-# アプリ起動（開発時）
-./mvnw spring-boot:run
-
-# ビルド
-./mvnw clean package
-
-# テスト実行（作成した場合）
-./mvnw test
-```
 
 - 起動後、ブラウザで `http://localhost:8080` にアクセス
 - H2のDBファイルはプロジェクト内に生成される（追加インストール不要）
@@ -53,7 +35,7 @@
 ### アーキテクチャ・パッケージ構成
 - レイヤードアーキテクチャを採用し、以下のパッケージ構成に従う。
   ```
-  com.example.equipmentmanagement
+  jp.co.example.equipmentmanagement
   ├── controller   # @Controller、画面遷移・フォーム処理
   ├── service      # ビジネスロジック（貸出可否判定、状態遷移など）
   ├── repository   # Spring Data JPAリポジトリ
@@ -64,8 +46,6 @@
 - Controllerに業務ロジックを書かない。状態遷移や貸出可否のチェックはServiceに実装する。
 
 ### 命名規則
-- クラス名：`PascalCase`（例：`EquipmentController`, `LendingService`）
-- メソッド名・変数名：`camelCase`
 - Thymeleafテンプレートファイル：`snake_case`または画面に対応する分かりやすい名前（例：`equipment_list.html`）
 - URLパス：ケバブケース、リソース名は複数形（例：`/equipment`, `/lendings`）
 
