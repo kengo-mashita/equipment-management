@@ -208,3 +208,8 @@ Task: "equipment-management-spec.md の7章からCSVエクスポートを削除"
 - [Story] label maps task to specific user story for traceability
 - テストは先に書き、失敗することを確認してから実装する
 - CLAUDE.md の運用ルールに従い、`/speckit-implement` 完了時にコミットする（機能単位のコミットでもよい）
+
+## Phase 6: Convergence
+
+- [ ] T018 利用者に依頼して、日本語版Excelで quickstart.md 手順2（ダウンロードしたCSVをダブルクリックで開き、6列が文字化け・列ずれなく表示され件数が画面の「全 N 件」と一致すること）と手順10（カンマ・ダブルクォートを含む品名が1セルにそのまま表示されること）を実施し、結果を T017 の実施結果の下に追記する per SC-002 (partial)
+- [ ] T019 検索条件なしの一覧で「CSVダウンロード」リンクが `/equipment/csv?name=&status=` と描画され、T003 に記載の `href="/equipment/csv"` と異なる点（空パラメータは条件なしとして扱われ、結合テストで担保済み）を、T011 と同様の「実装時の変更」メモとして tasks.md に記録する per T003 (contradicts)
