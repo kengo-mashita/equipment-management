@@ -78,6 +78,7 @@ Excelで開くと全備品が文字化けなく1行1件で並ぶ（quickstart.md
   - 条件なしのボディ行数（見出しを除く）が `EquipmentRepository.count()` と一致する
   - 貸出中の初期データ備品の行に、その有効な貸出記録の社員氏名が含まれる
   - `GET /equipment` のレスポンスHTMLに `href="/equipment/csv"` を含む「CSVダウンロード」リンクがある（USER・ADMINの両方）
+  - 実装時の変更：T012 で検索条件をリンクに埋め込んだ結果、条件なしの一覧ではリンクが `/equipment/csv?name=&status=` と描画される（Thymeleaf は null のパラメータを空値で出力する）。空パラメータは条件なしとして扱われ、結合テスト「空文字の検索条件は条件なしと同じ結果になる」で担保されているため、テンプレートで分岐させずこのURLを採用し、本テストの期待値を `href="/equipment/csv?name=&amp;status="` とした
 
 ### Implementation for User Story 1
 
@@ -212,4 +213,4 @@ Task: "equipment-management-spec.md の7章からCSVエクスポートを削除"
 ## Phase 6: Convergence
 
 - [ ] T018 利用者に依頼して、日本語版Excelで quickstart.md 手順2（ダウンロードしたCSVをダブルクリックで開き、6列が文字化け・列ずれなく表示され件数が画面の「全 N 件」と一致すること）と手順10（カンマ・ダブルクォートを含む品名が1セルにそのまま表示されること）を実施し、結果を T017 の実施結果の下に追記する per SC-002 (partial)
-- [ ] T019 検索条件なしの一覧で「CSVダウンロード」リンクが `/equipment/csv?name=&status=` と描画され、T003 に記載の `href="/equipment/csv"` と異なる点（空パラメータは条件なしとして扱われ、結合テストで担保済み）を、T011 と同様の「実装時の変更」メモとして tasks.md に記録する per T003 (contradicts)
+- [X] T019 検索条件なしの一覧で「CSVダウンロード」リンクが `/equipment/csv?name=&status=` と描画され、T003 に記載の `href="/equipment/csv"` と異なる点（空パラメータは条件なしとして扱われ、結合テストで担保済み）を、T011 と同様の「実装時の変更」メモとして tasks.md に記録する per T003 (contradicts)
