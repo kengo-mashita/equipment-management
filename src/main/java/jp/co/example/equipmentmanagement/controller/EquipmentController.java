@@ -1,5 +1,12 @@
 package jp.co.example.equipmentmanagement.controller;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -18,6 +25,7 @@ import jp.co.example.equipmentmanagement.dto.EquipmentForm;
 import jp.co.example.equipmentmanagement.entity.Equipment;
 import jp.co.example.equipmentmanagement.entity.EquipmentStatus;
 import jp.co.example.equipmentmanagement.service.EmployeeService;
+import jp.co.example.equipmentmanagement.service.EquipmentCsvExportService;
 import jp.co.example.equipmentmanagement.service.EquipmentDeletionNotAllowedException;
 import jp.co.example.equipmentmanagement.service.EquipmentNotFoundException;
 import jp.co.example.equipmentmanagement.service.EquipmentService;
@@ -35,6 +43,7 @@ public class EquipmentController {
     private final EquipmentService equipmentService;
     private final LendingService lendingService;
     private final EmployeeService employeeService;
+    private final EquipmentCsvExportService equipmentCsvExportService;
 
     @GetMapping
     public String list(@RequestParam(required = false) String name,
@@ -52,6 +61,18 @@ public class EquipmentController {
         // 「利用可」の行の貸出フォームで借用者（社員）を選択させるため、社員一覧を渡す
         model.addAttribute("employees", employeeService.findAll());
         return "equipment/list";
+    }
+
+    @GetMapping("/csv")
+    public ResponseEntity<byte[]> downloadCsv() {
+        byte[] csv = equipmentCsvExportService.export(null, null);
+        return ResponseEntity.ok()
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(equipmentCsvExportService.buildFileName(LocalDateTime.now()))
+                        .build()
+                        .toString())
+                .body(csv);
     }
 
     @GetMapping("/{id}")

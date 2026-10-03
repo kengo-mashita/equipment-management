@@ -252,6 +252,12 @@ a:hover {
     font-size: 13px;
 }
 
+.card__header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .card__body {
     padding: 20px;
 }

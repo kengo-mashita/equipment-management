@@ -34,7 +34,7 @@ description: "Task list for 備品一覧のCSVエクスポート"
 
 **Purpose**: 既存状態の確認（新規プロジェクト初期化・依存追加は不要：research.md R1）
 
-- [ ] T001 既存テストが全件成功することを確認する（`./mvnw test`）。失敗があれば本機能に着手せず原因を報告する。`pom.xml` は変更しない
+- [X] T001 既存テストが全件成功することを確認する（`./mvnw test`）。失敗があれば本機能に着手せず原因を報告する。`pom.xml` は変更しない
 
 ---
 
@@ -60,7 +60,7 @@ Excelで開くと全備品が文字化けなく1行1件で並ぶ（quickstart.md
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T002 [P] [US1] `TEST/service/EquipmentCsvExportServiceTest.java` を新規作成する（`@ExtendWith(MockitoExtension.class)`、`EquipmentService` と `LendingService` を `@Mock`、`EquipmentCsvExportService` を `@InjectMocks`。既存 `LendingServiceTest` の書き方に合わせ、テストメソッド名は日本語）。以下を検証する:
+- [X] T002 [P] [US1] `TEST/service/EquipmentCsvExportServiceTest.java` を新規作成する（`@ExtendWith(MockitoExtension.class)`、`EquipmentService` と `LendingService` を `@Mock`、`EquipmentCsvExportService` を `@InjectMocks`。既存 `LendingServiceTest` の書き方に合わせ、テストメソッド名は日本語）。以下を検証する:
   - 出力バイト列の先頭3バイトが BOM `EF BB BF` で、残りが UTF-8 でデコードできる
   - 1行目が見出し `品名,管理番号,保管場所,状態,購入日,借用者`（この順・この6列のみ。返却予定日等は出力しない）
   - 行区切りが CRLF で、最終行の後にも CRLF がある
@@ -71,7 +71,7 @@ Excelで開くと全備品が文字化けなく1行1件で並ぶ（quickstart.md
   - `EquipmentService.search` が空リストを返すと見出し行のみ（BOM + 見出し + CRLF）になる
   - 行の順序は `EquipmentService.search` の戻り値の順序のまま（並べ替えない）
   - `buildFileName(LocalDateTime.of(2026, 10, 3, 15, 30, 0))` が `equipment_20261003_153000.csv` を返す
-- [ ] T003 [P] [US1] `TEST/controller/EquipmentCsvControllerTest.java` を新規作成する（`@SpringBootTest` + `@AutoConfigureMockMvc` + `@Transactional`、既存 `EquipmentControllerTest` に合わせる。インメモリH2の初期データを利用）。以下を検証する:
+- [X] T003 [P] [US1] `TEST/controller/EquipmentCsvControllerTest.java` を新規作成する（`@SpringBootTest` + `@AutoConfigureMockMvc` + `@Transactional`、既存 `EquipmentControllerTest` に合わせる。インメモリH2の初期データを利用）。以下を検証する:
   - `@WithMockUser(roles = "USER")` で `GET /equipment/csv` → 200、`Content-Type` が `text/csv;charset=UTF-8`、`Content-Disposition` が `attachment; filename="equipment_\d{8}_\d{6}.csv"` の形式
   - `@WithMockUser(roles = "ADMIN")` でも 200
   - 未認証（`@WithAnonymousUser`）で `GET /equipment/csv` → 302 でログイン画面（`**/login`）へリダイレクト
@@ -81,17 +81,17 @@ Excelで開くと全備品が文字化けなく1行1件で並ぶ（quickstart.md
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] `MAIN/service/EquipmentCsvExportService.java` を新規作成する（`@Service`、`@RequiredArgsConstructor`、`@Slf4j`、依存は `EquipmentService` と `LendingService`）:
+- [X] T004 [US1] `MAIN/service/EquipmentCsvExportService.java` を新規作成する（`@Service`、`@RequiredArgsConstructor`、`@Slf4j`、依存は `EquipmentService` と `LendingService`）:
   - `public byte[] export(String name, EquipmentStatus status)`：`equipmentService.search(name, status)` の結果を順序を変えずに、data-model.md の列定義（品名=name、管理番号=assetNumber、保管場所=location、状態=status.getLabel()、購入日=purchaseDate.toString()、借用者=有効な貸出記録の employee.name。「状態が貸出中」かつ「有効な貸出記録が存在する」場合のみ）で1行ずつ出力する。null は空文字。見出し行を先頭に付け、各行末に CRLF。UTF-8 でバイト列化し先頭に BOM `EF BB BF` を付与する
   - `private static String escape(String value)`：`,` `"` `\r` `\n` のいずれかを含む場合のみ `"` で囲み、`"` を `""` に置換（research.md R3）。CSVインジェクション対策の加工はしない旨（R4）をコメントで残す
   - `public String buildFileName(LocalDateTime now)`：`equipment_yyyyMMdd_HHmmss.csv`
   - 出力時に `log.info` で検索条件（name, status）と出力件数を1行出す。借用者名はログに出さない（R11）
   - 列順・BOM・借用者の判定条件など業務ルールの意図をJavadoc/コメントで記載する（Constitution II）
   - T002 が成功することを確認する（depends on T002）
-- [ ] T005 [US1] `MAIN/controller/EquipmentController.java` に `@GetMapping("/csv")` のハンドラを追加する。`EquipmentCsvExportService` をフィールド注入（`private final`）し、`export(null, null)` の結果を `ResponseEntity<byte[]>` で返す。ヘッダーは `Content-Type: text/csv;charset=UTF-8`（`MediaType` に charset UTF-8 を付与）と、`ContentDisposition.attachment().filename(buildFileName(LocalDateTime.now()))` による `Content-Disposition`。Controller に CSV 組み立てロジックを書かない（depends on T004）
-- [ ] T006 [US1] `src/main/resources/templates/equipment/list.html` の「備品リスト」カードヘッダー（`.card__header` 内、件数表示 `card__meta` の隣）に `<a class="btn btn--secondary btn--sm" th:href="@{/equipment/csv}">CSVダウンロード</a>` を追加する。`sec:authorize` で出し分けない（ADMIN/USER共通）。0件時も表示されるよう `th:if`/`th:unless` の外に置く。JavaScript は使わない
-- [ ] T007 [US1] `src/main/resources/static/css/app.css` で、`.card__header` 内にリンクを置いたときの配置（件数とリンクを右寄せで横並び）と、スマホ幅（`@media (max-width: 768px)` 内の既存 `.card__header` 定義付近）での折り返しを確認し、崩れる場合のみ最小限のスタイルを追加する。既存クラスで問題なければ変更しない
-- [ ] T008 [US1] `./mvnw test` を実行し、T002・T003 と既存テストがすべて成功することを確認する
+- [X] T005 [US1] `MAIN/controller/EquipmentController.java` に `@GetMapping("/csv")` のハンドラを追加する。`EquipmentCsvExportService` をフィールド注入（`private final`）し、`export(null, null)` の結果を `ResponseEntity<byte[]>` で返す。ヘッダーは `Content-Type: text/csv;charset=UTF-8`（`MediaType` に charset UTF-8 を付与）と、`ContentDisposition.attachment().filename(buildFileName(LocalDateTime.now()))` による `Content-Disposition`。Controller に CSV 組み立てロジックを書かない（depends on T004）
+- [X] T006 [US1] `src/main/resources/templates/equipment/list.html` の「備品リスト」カードヘッダー（`.card__header` 内、件数表示 `card__meta` の隣）に `<a class="btn btn--secondary btn--sm" th:href="@{/equipment/csv}">CSVダウンロード</a>` を追加する。`sec:authorize` で出し分けない（ADMIN/USER共通）。0件時も表示されるよう `th:if`/`th:unless` の外に置く。JavaScript は使わない
+- [X] T007 [US1] `src/main/resources/static/css/app.css` で、`.card__header` 内にリンクを置いたときの配置（件数とリンクを右寄せで横並び）と、スマホ幅（`@media (max-width: 768px)` 内の既存 `.card__header` 定義付近）での折り返しを確認し、崩れる場合のみ最小限のスタイルを追加する。既存クラスで問題なければ変更しない
+- [X] T008 [US1] `./mvnw test` を実行し、T002・T003 と既存テストがすべて成功することを確認する
 
 **Checkpoint**: 全件のCSVダウンロードが単独で動作し、テストで担保されている（MVP）
 

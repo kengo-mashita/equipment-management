@@ -1,0 +1,126 @@
+package jp.co.example.equipmentmanagement.controller;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
+
+import jp.co.example.equipmentmanagement.entity.Lending;
+import jp.co.example.equipmentmanagement.repository.EquipmentRepository;
+import jp.co.example.equipmentmanagement.repository.LendingRepository;
+
+/**
+ * 備品一覧CSVダウンロード（GET /equipment/csv）の結合テスト。
+ * ロール別のアクセス可否、レスポンスヘッダー、出力内容と一覧画面との一致を確認する。
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class EquipmentCsvControllerTest {
+
+    private static final String HEADER = "品名,管理番号,保管場所,状態,購入日,借用者";
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private EquipmentRepository equipmentRepository;
+
+    @Autowired
+    private LendingRepository lendingRepository;
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void USERはCSVをダウンロードできる() throws Exception {
+        mockMvc.perform(get("/equipment/csv"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("text/csv;charset=UTF-8"))
+                .andExpect(header().string("Content-Disposition",
+                        Matchers.matchesPattern("attachment; filename=\"equipment_\\d{8}_\\d{6}\\.csv\"")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void ADMINはCSVをダウンロードできる() throws Exception {
+        mockMvc.perform(get("/equipment/csv"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("text/csv;charset=UTF-8"));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void 未認証ではCSVを取得できずログイン画面へリダイレクトされる() throws Exception {
+        mockMvc.perform(get("/equipment/csv"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void 条件なしでは全備品が見出し行付きで出力される() throws Exception {
+        List<String> lines = csvLines(mockMvc.perform(get("/equipment/csv")).andReturn());
+
+        assertThat(lines.get(0)).isEqualTo(HEADER);
+        assertThat(lines).hasSize((int) equipmentRepository.count() + 1);
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void 貸出中の備品の行には現在の借用者名が出力される() throws Exception {
+        List<Lending> activeLendings = lendingRepository.findAllByReturnedAtIsNull();
+        assertThat(activeLendings).isNotEmpty();
+
+        List<String> lines = csvLines(mockMvc.perform(get("/equipment/csv")).andReturn());
+
+        for (Lending lending : activeLendings) {
+            String assetNumber = lending.getEquipment().getAssetNumber();
+            assertThat(lines).anySatisfy(line -> assertThat(line)
+                    .contains("," + assetNumber + ",")
+                    .contains(",貸出中,")
+                    .endsWith("," + lending.getEmployee().getName()));
+        }
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void USERの一覧画面にCSVダウンロードリンクが表示される() throws Exception {
+        mockMvc.perform(get("/equipment"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("href=\"/equipment/csv\"")))
+                .andExpect(content().string(Matchers.containsString("CSVダウンロード")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void ADMINの一覧画面にCSVダウンロードリンクが表示される() throws Exception {
+        mockMvc.perform(get("/equipment"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("href=\"/equipment/csv\"")));
+    }
+
+    /** レスポンスのBOMを検証して除去し、CRLFで行に分割する（末尾の空要素は含めない） */
+    private List<String> csvLines(MvcResult result) {
+        byte[] bytes = result.getResponse().getContentAsByteArray();
+        assertThat(Arrays.copyOf(bytes, 3)).containsExactly(0xEF, 0xBB, 0xBF);
+        String body = new String(bytes, 3, bytes.length - 3, StandardCharsets.UTF_8);
+        assertThat(body).endsWith("\r\n");
+        return List.of(body.split("\r\n"));
+    }
+}
