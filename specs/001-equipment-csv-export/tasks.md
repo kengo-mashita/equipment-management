@@ -133,10 +133,11 @@ Excelで開くと全備品が文字化けなく1行1件で並ぶ（quickstart.md
 
 **Purpose**: ドキュメント整備と最終確認
 
-- [ ] T014 [P] `README.md` を更新する：「機能」の備品管理に「一覧のCSVダウンロード（表示中の検索条件で出力、BOM付きUTF-8、ADMIN/USER共通）」を追記し、画面一覧に `/equipment/csv`（ADMIN, USER）を追加、末尾「スコープ外」のCSVエクスポートの記述を削除する
-- [ ] T015 [P] `equipment-management-spec.md` の7章「スコープ外事項」からCSVエクスポートの行を削除し、本機能の仕様（`specs/001-equipment-csv-export/spec.md`）への参照を追記する
-- [ ] T016 Constitution 制約の最終確認：`git diff` で `src/main/resources/templates/` に `<script` や `on*=` 属性が追加されていないこと、`pom.xml`・`SecurityConfig.java`・`entity/`・`repository/` に変更がないこと、Controller にCSV組み立てロジックがないことを確認する
-- [ ] T017 `./mvnw test` を実行し全件成功を確認したうえで、`./mvnw spring-boot:run` で quickstart.md の手順1〜10を実施する（Excelでの確認は利用者に依頼し、結果を記録する）
+- [X] T014 [P] `README.md` を更新する：「機能」の備品管理に「一覧のCSVダウンロード（表示中の検索条件で出力、BOM付きUTF-8、ADMIN/USER共通）」を追記し、画面一覧に `/equipment/csv`（ADMIN, USER）を追加、末尾「スコープ外」のCSVエクスポートの記述を削除する
+- [X] T015 [P] `equipment-management-spec.md` の7章「スコープ外事項」からCSVエクスポートの行を削除し、本機能の仕様（`specs/001-equipment-csv-export/spec.md`）への参照を追記する
+- [X] T016 Constitution 制約の最終確認：`git diff` で `src/main/resources/templates/` に `<script` や `on*=` 属性が追加されていないこと、`pom.xml`・`SecurityConfig.java`・`entity/`・`repository/` に変更がないこと、Controller にCSV組み立てロジックがないことを確認する
+- [X] T017 `./mvnw test` を実行し全件成功を確認したうえで、`./mvnw spring-boot:run` で quickstart.md の手順1〜10を実施する（Excelでの確認は利用者に依頼し、結果を記録する）
+  - 実施結果（2026-10-03）：`./mvnw clean test` 90件成功。起動したアプリに curl で手順1, 3〜9 を確認し期待どおり（BOM・CRLF・ヘッダー・ファイル名、借用者出力、状態絞り込み、表示中条件のリンク埋め込み、0件は見出しのみ、ADMIN/USERで200、未ログインは `/login` へ302、不正な状態値は一覧へ302＋「検索条件が不正です」）。手順2（Excelでの表示）は利用者による確認待ち。手順10（カンマ・ダブルクォートを含む値）は開発用DBを汚さないため単体テストで代替
 
 ---
 

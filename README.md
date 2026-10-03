@@ -71,6 +71,7 @@ CSSのみ（メディアクエリ）でスマホ・タブレット幅に対応�
 - 新規登録・編集（ADMINのみ）：管理番号の重複チェック、必須項目バリデーション
 - 削除（ADMINのみ）：貸出履歴が存在する備品は参照整合性のため削除不可
 - 詳細画面：登録日時・更新日時・（貸出中の場合）借用者名を表示
+- CSVダウンロード（ADMIN/USER共通）：一覧に表示中の備品（最後に実行した検索条件の結果）を、品名・管理番号・保管場所・状態・購入日・借用者の6列で出力する。BOM付きUTF-8・CRLFのため、日本語版Excelでそのまま開ける（仕様：[`specs/001-equipment-csv-export/spec.md`](./specs/001-equipment-csv-export/spec.md)）
 
 ### 貸出管理
 - 「利用可」の備品のみ貸出登録が可能（ADMIN/USER共通）
@@ -91,6 +92,7 @@ CSSのみ（メディアクエリ）でスマホ・タブレット幅に対応�
 |---|---|---|
 | ログイン | `/login` | 全員（未ログイン） |
 | 備品一覧（検索・貸出・返却） | `/equipment` | ADMIN, USER |
+| 備品一覧CSVダウンロード | `/equipment/csv` | ADMIN, USER |
 | 備品詳細 | `/equipment/{id}` | ADMIN, USER |
 | 備品登録 / 編集 | `/equipment/new`, `/equipment/{id}/edit` | ADMIN |
 | 貸出履歴 | `/lendings` | ADMIN, USER |
@@ -116,7 +118,3 @@ Service層の業務ロジック（貸出可否判定・状態遷移・重複チ�
 ```bash
 ./mvnw test
 ```
-
-## スコープ外
-
-CSVエクスポート機能は別途仕様化するため、本リポジトリのスコープには含まれない（詳細は要件定義書7章を参照）。
